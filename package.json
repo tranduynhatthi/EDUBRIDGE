@@ -1,6 +1,6 @@
 {
   "name": "edubridge-mvp-vatli12-select-lesson",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,7 +11,8 @@
     "test:contracts": "node tools/test-contracts.cjs",
     "test:catalog": "node tools/test-catalog.cjs",
     "test:mvp": "node tests/mvp-smoke.cjs",
-    "test:gemini": "node tests/gemini-api.cjs"
+    "test:gemini": "node tests/gemini-api.cjs",
+    "test:extraction": "node tests/extraction-review.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

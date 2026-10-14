@@ -99,8 +99,16 @@ export default function LibraryAdmin(){
   if(!editId)return;setBusy(true);setError('');setStatus('');setExtractError('');setExtractStatus('Đang tải và tách các trang SGK từ kho riêng tư, sau đó gửi Gemini đọc hình ảnh. Vui lòng chờ...');
   try{
    const r=await authorizedFetch(`/api/admin/lessons/${editId}/analyze-pdf`,{method:'POST'});
-   const json=await r.json();if(!r.ok)throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'AI không đọc được trang PDF ảnh.'));
-   setExtractStatus('Gemini đã trả nội dung nháp.');setEditText(json.sourceText);setEditNote(json.extractionNote);setConfirmed(false);
+   const json=await r.json();
+   if(!r.ok){
+    if(typeof json.draftSourceText==='string'&&json.draftSourceText.trim()){
+     setEditText(json.draftSourceText);setEditNote(json.extractionNote||'Bản trích xuất chưa đủ. Giáo viên phải bổ sung và đối chiếu với SGK.');
+     setConfirmed(false);setExtractStatus('Có nội dung PDF nhưng chưa đủ để lưu tự động. Văn bản đã được đưa vào ô bên dưới để sửa; chưa ghi vào cơ sở dữ liệu.');
+    }
+    throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'AI không đọc được trang PDF ảnh.'));
+   }
+   setExtractStatus('Gemini đã tạo bản nháp '+(json.extractedLength||json.sourceText.length)+' ký tự bằng cách '+(json.method==='split-pages'?'đọc hai nhóm trang.':'đọc cả bài.')+' Nội dung cần hậu kiểm.');
+   setEditText(json.sourceText);setEditNote(json.extractionNote);setConfirmed(false);
    await refresh();setStatus('AI đã đọc PDF ảnh và ghi BẢN NHÁP. Hãy mở SGK đối chiếu từng công thức và hình vẽ trước khi duyệt.');
   }catch(e){const msg=e instanceof Error?e.message:'Không tạo được bản nháp từ SGK.';setExtractError(msg);setError(msg);setExtractStatus('Trích xuất thất bại; dữ liệu chưa bị ghi đè.');}finally{setBusy(false);}
  }

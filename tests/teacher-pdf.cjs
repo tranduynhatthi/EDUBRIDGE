@@ -9,6 +9,6 @@ assert(api.includes("code:'PDF_PARSE_FAILED'"),'Distinguish corrupt PDF');
 assert(api.includes("code:'PDF_NO_CONTENT'"),'Distinguish blank scanned PDF');
 assert(api.includes('canCreateLesson:sourceText.length>=MIN_LESSON_CHARS'));
 assert(api.includes('MAX_UPLOAD_BYTES=4*1024*1024'));
-assert(ui.includes("pdfStatus")&&ui.includes("json.extractedLength"));
+assert(!ui.includes('type="file"')&&!ui.includes('pdfStatus'),'Database-only builder must not show PDF upload interface');
 assert(ui.includes("await response.text()"),'Vercel non-JSON responses must be diagnosed');
 console.log('PASS: PDF extraction backend remains available to authorized workflows; teacher UI is database-only.');

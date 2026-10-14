@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
+const file=path.join(process.cwd(),'src/lib/subjects.ts');
+const forbidden=['Ngoại ngữ 1','Ngoại ngữ 2','Tiếng dân tộc thiểu số','Âm nhạc','Mĩ thuật','Giáo dục thể chất','Giáo dục quốc phòng và an ninh'];
+const expected=['Ngữ văn','Toán','Lịch sử','Địa lí','Giáo dục kinh tế và pháp luật','Vật lí','Hóa học','Sinh học','Công nghệ','Tin học'];
+const js="const m=await import('file://'+process.argv[1]);const forbidden=JSON.parse(process.argv[2]);const expected=JSON.parse(process.argv[3]);if(m.SUBJECT_NAMES.length!==10)throw Error('Expected exactly 10 subjects');for(const k of forbidden){if(m.SUBJECT_NAMES.includes(k)||m.isValidSubject(k))throw Error('Subject still visible: '+k)}for(const k of expected){if(!m.SUBJECT_NAMES.includes(k)||!m.isValidSubject(k))throw Error('Missing supported subject: '+k)}if(m.SUBJECT_GROUPS.some(g=>g.items.length===0))throw Error('Empty subject group');console.log('PASS: 10 supported subjects, 7 excluded, no empty group');";
+const p=spawnSync(process.execPath,['--experimental-strip-types','--input-type=module','-e',js,file,JSON.stringify(forbidden),JSON.stringify(expected)],{encoding:'utf8'});
+assert.equal(p.status,0,p.stderr||p.stdout);
+const dash=fs.readFileSync(path.join(process.cwd(),'src/app/dashboard/page.tsx'),'utf8');
+assert(dash.includes('SUBJECT_GROUPS.map('));
+console.log('PASS: dashboard is driven by centralized filtered subjects; no database deletion.');

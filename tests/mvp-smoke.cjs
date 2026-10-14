@@ -22,6 +22,6 @@ const dashboard=read('src/app/dashboard/page.tsx');
 const subjects=read('src/lib/subjects.ts');
 const ai=read('src/app/api/ai/lesson/route.ts');
 assert(dashboard.includes('Xin chào, {displayName}'));
-assert(subjects.includes('Giáo dục kinh tế và pháp luật')&&subjects.includes('Mĩ thuật'));
+assert(subjects.includes('Giáo dục kinh tế và pháp luật')&&!subjects.includes("'Mĩ thuật'"));
 assert(ai.includes('subject:book.subject')&&ai.includes('subject:custom.data.subject'));
 console.log('PASS: multi-subject capability static smoke checks.');

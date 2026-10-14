@@ -28,14 +28,14 @@ export default function Dashboard(){
  <p>Chọn môn học bạn đang giảng dạy. EDUBRIDGE sẽ giúp tạo học liệu EMI/CLIL, slide, câu giao tiếp và bài tập từ nguồn bạn cung cấp.</p>
  <a className="primary-btn" href="#chon-mon">Chọn môn học <ArrowRight size={17}/></a></div><div className="hero-icon"><Sparkles size={56}/></div></section>
  <div className="stats"><div className="stat"><Layers3 size={24}/><div><b>{items.length}</b><small>Bài học đã tạo</small></div></div>
- <div className="stat"><BookOpen size={24}/><div><b>{SUBJECT_GROUPS.reduce((n,g)=>n+g.items.length,0)} môn</b><small>Danh mục môn THPT</small></div></div>
+ <div className="stat"><BookOpen size={24}/><div><b>{SUBJECT_GROUPS.reduce((n,g)=>n+g.items.length,0)} môn</b><small>Môn hiện hỗ trợ</small></div></div>
  <div className="stat"><Clock3 size={24}/><div><b>EMI / CLIL</b><small>Dạy học song ngữ với Gemini</small></div></div></div>
  <section id="chon-mon" className="white-panel subject-panel"><div className="section-heading"><div><h2>Chọn môn học</h2><p>Nhấn vào một môn để mở trang Chọn bài từ sách giáo khoa; không cần chọn bộ sách.</p></div></div>
  {SUBJECT_GROUPS.map(group=><div className="subject-group" key={group.id}><h3>{group.label}</h3><div className="subject-grid">
  {group.items.map(subject=><Link key={subject} href={`/builder?subject=${encodeURIComponent(subject)}`} className="subject-card">
  <span className="subject-icon"><BookOpen size={20}/></span><strong>{subject}</strong><ArrowRight size={17} className="subject-arrow"/></Link>)}
  </div></div>)}
- <p className="muted" style={{marginTop:16,fontSize:12}}>Danh mục theo Chương trình GDPT 2018 cấp THPT đã điều chỉnh; hoạt động trải nghiệm và nội dung giáo dục địa phương không phải tên môn trong nhóm trên.</p>
+ <p className="muted" style={{marginTop:16,fontSize:12}}>Danh mục môn đang được EDUBRIDGE hỗ trợ; không phải toàn bộ môn học của Chương trình GDPT 2018. Bài giảng đã tạo trước đây vẫn được lưu trong tài khoản.</p>
  </section>
  <section className="white-panel" style={{marginTop:22}}><div className="section-heading"><div><h2>Bài học của tôi</h2><p>Nội dung đã tạo và lưu trong tài khoản.</p></div>
  <Link href="/builder" className="secondary-btn"><FilePlus2 size={16}/> Tạo bài mới</Link></div>

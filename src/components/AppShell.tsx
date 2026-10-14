@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import {usePathname, useRouter} from 'next/navigation';
 import {useEffect,useState} from 'react';
-import {BookOpen, LayoutDashboard, LogOut, Sparkles, LibraryBig, ClipboardList} from 'lucide-react';
+import {BookOpen, LayoutDashboard, LogOut, Sparkles, LibraryBig, ClipboardList, Mic2, Languages} from 'lucide-react';
 import {supabaseBrowser} from '@/lib/supabase';
 
 export default function AppShell({children,subtitle}:{children:React.ReactNode,subtitle?:string}) {
@@ -16,8 +16,8 @@ export default function AppShell({children,subtitle}:{children:React.ReactNode,s
       <div className="brand"><div className="brand-mark"><BookOpen size={23}/></div><div><strong>EDUBRIDGE</strong><small>AI LESSON BUILDER</small></div></div>
       <p className="side-label">KHÔNG GIAN GIÁO VIÊN</p>
       <nav className="side-nav"><Link className={pathname==='/dashboard'?'selected':''} href="/dashboard"><LayoutDashboard size={18}/> Tổng quan</Link>
-      <Link className={pathname==='/builder'?'selected':''} href="/builder"><Sparkles size={18}/> Chọn bài từ SGK</Link><Link className={pathname==='/assignments'?'selected':''} href="/assignments"><ClipboardList size={18}/> Kết quả học sinh</Link>{isAdmin&&<Link className={pathname.startsWith('/admin/library')?'selected':''} href="/admin/library"><LibraryBig size={18}/> Quản trị SGK</Link>}</nav>
-      <div className="sidebar-bottom"><p>MVP 1.1 · Kho SGK</p><button type="button" className="nav-logout" onClick={logout}><LogOut size={17}/> Đăng xuất</button></div>
+      <Link className={pathname==='/builder'?'selected':''} href="/builder"><Sparkles size={18}/> Chọn bài từ SGK</Link><Link className={pathname==='/assignments'?'selected':''} href="/assignments"><ClipboardList size={18}/> Kết quả học sinh</Link><Link className={pathname==='/dictionary'?'selected':''} href="/dictionary"><Languages size={18}/> Từ điển chuyên ngành</Link><Link className={pathname==='/practice'?'selected':''} href="/practice"><Mic2 size={18}/> Luyện nói tiếng Anh</Link>{isAdmin&&<Link className={pathname.startsWith('/admin/library')?'selected':''} href="/admin/library"><LibraryBig size={18}/> Quản trị SGK</Link>}</nav>
+      <div className="sidebar-bottom"><p>MVP 1.4 · Kho SGK & CLIL</p><button type="button" className="nav-logout" onClick={logout}><LogOut size={17}/> Đăng xuất</button></div>
     </aside>
     <div className="main-area"><header className="topbar"><span>EDUBRIDGE / {subtitle||'Không gian làm việc'}</span><span className="top-tag">GIÁO VIÊN</span></header><main className="main-content">{children}</main></div>
   </div>;

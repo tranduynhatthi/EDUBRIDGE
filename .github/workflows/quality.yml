@@ -1,0 +1,25 @@
+name: EDUBRIDGE Quality Gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run check:syntax
+      - run: npm run test:contracts
+      - run: npm run test:catalog
+      - run: npm run test:mvp
+      - run: npm run typecheck
+      - name: Build Next.js
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_nonsecret
+        run: npm run build

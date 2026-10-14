@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     for (const item of content.slides) {
       const s = make(item.title.slice(0,80),n++);
       s.addText(item.bullets.slice(0,6).map(v=>'•  '+v).join('\n\n'),{x:0.85,y:1.85,w:11.4,h:4.75,fontSize:20,color:navy,margin:0,breakLine:false});
-      // Teacher script is retained in the web UI. Avoid text overflow in the slide deck.
+      // Teacher script is stored as editable PowerPoint speaker notes.
+      s.addNotes(item.teacherScript);
     }
     const finish = make('Quick Check & Reflection',n++);
     finish.addText('What did you learn today?\n\nExplain one key concept using English.\n\nComplete the quiz in EDUBRIDGE.',{x:0.9,y:2,w:11,h:3.7,fontSize:22,color:navy,margin:0});

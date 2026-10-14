@@ -1,0 +1,13 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path'),{spawnSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
+for(const p of ['src/app/builder/page.tsx','src/app/student/page.tsx','src/app/assignments/page.tsx','src/app/dictionary/page.tsx','src/app/practice/page.tsx','src/app/api/ai/lesson/route.ts','src/app/api/export/pptx/route.ts','supabase/04_bai1_student_cycle.sql'])assert(fs.existsSync(path.join(root,p)),p+' not found');
+assert(read('src/app/api/export/pptx/route.ts').includes('s.addNotes(item.teacherScript)'));
+assert(read('src/app/lessons/[id]/page.tsx').includes('LessonResultSchema.safeParse(result)'));
+assert(read('src/app/lessons/[id]/page.tsx').includes('disabled={busy||unsaved}'));
+assert(read('src/components/RequireLogin.tsx').includes("profile?.role==='student'"));
+assert(!fs.existsSync(path.join(root,'.env.local')));
+assert(read('.gitignore').includes('.env*'));
+const source="import {wordMatch} from '"+('file://'+path.join(root,'src/lib/speech-practice.ts'))+"'; if(wordMatch('Read the textbook','Read the textbook')!==100)process.exit(1);if(wordMatch('Read the textbook','hello')>=100)process.exit(2);if(wordMatch('','')!==0)process.exit(3);";
+const r=spawnSync(process.execPath,['--experimental-strip-types','--input-type=module','-e',source],{encoding:'utf8'});
+assert.equal(r.status,0,r.stderr);
+console.log('PASS: 12 smoke/security checks. Live Supabase and OpenAI not tested.');

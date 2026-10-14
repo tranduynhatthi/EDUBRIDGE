@@ -1,6 +1,6 @@
 {
   "name": "edubridge-mvp-vatli12-select-lesson",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "check:syntax": "node tools/check-source.cjs",
     "test:contracts": "node tools/test-contracts.cjs",
-    "test:catalog": "node tools/test-catalog.cjs"
+    "test:catalog": "node tools/test-catalog.cjs",
+    "test:mvp": "node tests/mvp-smoke.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

@@ -54,7 +54,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
    ].join(' '),
    input:[{role:'user',content:[
     {type:'input_text',text:`SÁCH: ${b.title} – ${b.book_series}; ${lesson.chapter}; ${lesson.title}; trang PDF gốc ${lesson.start_page} đến ${lesson.end_page}. Các trang trong PDF đính kèm đã được cắt riêng, tương ứng lần lượt với các trang PDF gốc trong khoảng này. Hãy đọc toàn bộ trang và viết ghi chú có căn cứ; đánh dấu phần khó đọc.`},
-    {type:'input_file',filename:`vatli12-bai-${lesson.start_page}-${lesson.end_page}.pdf`,file_data:`data:application/pdf;base64,${Buffer.from(bytes).toString('base64')}`,detail:'high'},
+    {type:'input_file',filename:`vatli12-bai-${lesson.start_page}-${lesson.end_page}.pdf`,file_data:`data:application/pdf;base64,${Buffer.from(bytes).toString('base64')}`},
    ]}],
    text:{format:zodTextFormat(NotesSchema,'reviewable_textbook_notes')}
   });

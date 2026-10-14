@@ -12,6 +12,6 @@ for(const a of m.lessons){assert.equal(a.sortOrder,m.lessons.indexOf(a)+1);asser
 assert(read('supabase/03_seed_scanned_pdf.sql').includes('textbook_lessons_publish_requires_content'));
 assert(read('src/app/api/admin/catalog-seed/route.ts').includes('hash!==catalog.sha256'));
 assert(read('src/app/api/admin/lessons/[id]/analyze-pdf/route.ts').includes('PDFDocument.load'));
-assert(read('src/app/api/admin/lessons/[id]/analyze-pdf/route.ts').includes('input_file'));
+assert(read('src/app/api/admin/lessons/[id]/analyze-pdf/route.ts').includes("mimeType:'application/pdf'"));
 assert(read('src/app/builder/page.tsx').includes(".eq('is_published',true)"));
 console.log('PASS: 25 lesson boundaries, chapters, PDF fingerprint and staged AI review workflow.');

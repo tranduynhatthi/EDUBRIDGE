@@ -1,0 +1,25 @@
+// Static contract tests that run without npm dependencies.
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const root = path.resolve(__dirname,'..');
+const read = name => fs.readFileSync(path.join(root,name),'utf8');
+const teacher = read('src/app/builder/page.tsx');
+const api = read('src/app/api/ai/lesson/route.ts');
+const sql = read('supabase/02_textbook_library.sql');
+const books = read('src/app/api/admin/books/route.ts');
+const lessonAdmin = read('src/app/api/admin/lessons/route.ts');
+const review = read('src/app/api/admin/lessons/[id]/route.ts');
+assert(!teacher.includes('type="file"'),'Teacher must NOT upload SGK in lesson builder');
+assert(teacher.includes('textbookLessonId:lessonId'),'Teacher sends selected lesson ID');
+assert(teacher.includes(".eq('is_published',true)"),'Catalog must show only approved lessons');
+assert(api.includes('CatalogRequestSchema.safeParse(body)'),'AI endpoint must validate catalog-only requests');
+assert(api.includes(".eq('is_published',true)"),'AI endpoint must filter published lessons');
+assert(!api.includes('sourceText: incoming.sourceText'),'AI endpoint must not accept arbitrary source');
+assert(api.includes('textbook_lesson_id: data.textbookLessonId'),'Generated lesson records source FK');
+assert(books.includes('requireAdmin(request)') && lessonAdmin.includes('requireAdmin(request)') && review.includes('requireAdmin(request)'),'All write endpoints require admin');
+assert(sql.includes("'edubridge-textbooks','edubridge-textbooks',false"),'Source PDF must be in PRIVATE bucket');
+assert(sql.includes('enable row level security'),'Textbook data must have RLS');
+assert(sql.includes('is_published and exists'),'Non-admins can only read published content');
+assert(!fs.existsSync(path.join(root,'src/app/api/files/extract/route.ts')),'Old teacher-upload endpoint must be removed');
+console.log('PASS: 12 contract assertions for catalog-only teacher workflow and admin-reviewed SGK.');

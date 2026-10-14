@@ -1,0 +1,241 @@
+{
+  "lessonTitleEn": "Particle Structure and Changes of State",
+  "contentObjectives": [
+    "Describe the main assumptions of the particle model of matter.",
+    "Compare particle arrangement and motion in solids, liquids and gases.",
+    "Explain melting, freezing, vaporisation and condensation using the particle model."
+  ],
+  "languageObjectives": [
+    "Use particle, solid, liquid, gas, melting and condensation in short English sentences.",
+    "Compare the three states of matter using whereas, closer together and move more freely."
+  ],
+  "keyConcepts": [
+    {
+      "vi": "Vật chất được cấu tạo từ các hạt rất nhỏ, các hạt chuyển động liên tục",
+      "en": "Matter consists of tiny particles that move continuously."
+    },
+    {
+      "vi": "Giữa các hạt có tương tác",
+      "en": "Particles interact through attractive and repulsive forces."
+    },
+    {
+      "vi": "Chuyển thể là sự chuyển từ trạng thái vật chất này sang trạng thái khác",
+      "en": "A change of state is a transition from one state of matter to another."
+    }
+  ],
+  "vocabulary": [
+    {
+      "termEn": "particle",
+      "termVi": "hạt",
+      "definitionEn": "A tiny constituent used in the particle model of matter.",
+      "exampleEn": "Matter is made of tiny particles."
+    },
+    {
+      "termEn": "molecule",
+      "termVi": "phân tử",
+      "definitionEn": "A particle consisting of atoms bonded together.",
+      "exampleEn": "Water molecules are in constant motion."
+    },
+    {
+      "termEn": "solid",
+      "termVi": "chất rắn",
+      "definitionEn": "A state of matter with a stable shape and volume under ordinary conditions.",
+      "exampleEn": "Ice is a solid."
+    },
+    {
+      "termEn": "liquid",
+      "termVi": "chất lỏng",
+      "definitionEn": "A state of matter with a definite volume but no fixed shape.",
+      "exampleEn": "Water is a liquid."
+    },
+    {
+      "termEn": "gas",
+      "termVi": "chất khí",
+      "definitionEn": "A state of matter that can fill its container.",
+      "exampleEn": "Water vapour is a gas."
+    },
+    {
+      "termEn": "melting",
+      "termVi": "sự nóng chảy",
+      "definitionEn": "A change from solid to liquid.",
+      "exampleEn": "Ice melts into liquid water."
+    },
+    {
+      "termEn": "freezing",
+      "termVi": "sự đông đặc",
+      "definitionEn": "A change from liquid to solid.",
+      "exampleEn": "Water freezes into ice."
+    },
+    {
+      "termEn": "vaporisation",
+      "termVi": "sự hoá hơi",
+      "definitionEn": "A change from liquid to gas.",
+      "exampleEn": "Vaporisation changes water into water vapour."
+    },
+    {
+      "termEn": "condensation",
+      "termVi": "sự ngưng tụ",
+      "definitionEn": "A change from gas to liquid.",
+      "exampleEn": "Condensation forms water droplets."
+    },
+    {
+      "termEn": "Brownian motion",
+      "termVi": "chuyển động Brown",
+      "definitionEn": "Irregular motion of small suspended particles due to collisions with molecules.",
+      "exampleEn": "Brownian motion provides evidence for the motion of molecules."
+    }
+  ],
+  "classroomPhrases": [
+    {
+      "english": "Look at the diagram of the three states.",
+      "vietnamese": "Hãy quan sát sơ đồ ba trạng thái."
+    },
+    {
+      "english": "How do the particles move?",
+      "vietnamese": "Các hạt chuyển động như thế nào?"
+    },
+    {
+      "english": "Compare a solid with a gas.",
+      "vietnamese": "So sánh chất rắn với chất khí."
+    },
+    {
+      "english": "Work in pairs and explain your answer.",
+      "vietnamese": "Làm việc theo cặp và giải thích câu trả lời."
+    },
+    {
+      "english": "What happens when ice melts?",
+      "vietnamese": "Điều gì xảy ra khi nước đá nóng chảy?"
+    },
+    {
+      "english": "Please use the word “condensation”.",
+      "vietnamese": "Hãy dùng từ “condensation”."
+    },
+    {
+      "english": "Check the particle arrangement.",
+      "vietnamese": "Kiểm tra cách sắp xếp các hạt."
+    },
+    {
+      "english": "Explain your reasoning using the particle model.",
+      "vietnamese": "Giải thích lập luận bằng mô hình hạt."
+    }
+  ],
+  "slides": [
+    {
+      "title": "Particle Structure and Changes of State",
+      "bullets": [
+        "Physics 12 – Lesson 1",
+        "Look at ice, water and water vapour.",
+        "What is the difference?"
+      ],
+      "teacherScript": "Today we will use the particle model to explain solids, liquids and gases. Look at ice and water. What do you notice?"
+    },
+    {
+      "title": "The particle model",
+      "bullets": [
+        "Matter is made of tiny particles.",
+        "Particles are always moving.",
+        "Particles interact with one another."
+      ],
+      "teacherScript": "Matter is made of tiny particles. They always move. Particles also interact. Can you give an example?"
+    },
+    {
+      "title": "Solids, liquids and gases",
+      "bullets": [
+        "Solid: particles close together, mainly vibrate.",
+        "Liquid: particles remain close but move past each other.",
+        "Gas: particles are far apart and move freely."
+      ],
+      "teacherScript": "In a solid, particles stay close and mainly vibrate. In a liquid, particles move past one another. In a gas, particles move freely."
+    },
+    {
+      "title": "Changes of state",
+      "bullets": [
+        "Melting: solid → liquid",
+        "Freezing: liquid → solid",
+        "Vaporisation: liquid → gas",
+        "Condensation: gas → liquid"
+      ],
+      "teacherScript": "When ice becomes water, we call it melting. The opposite change is freezing. Which process forms droplets from water vapour?"
+    },
+    {
+      "title": "Heating and a change of state",
+      "bullets": [
+        "Heating usually increases particle motion.",
+        "During melting or boiling at fixed pressure, temperature may remain constant.",
+        "Energy is used to change the state."
+      ],
+      "teacherScript": "During melting, the material can absorb energy even when its temperature stays constant. Why? The energy changes particle arrangement and interactions."
+    },
+    {
+      "title": "Check your understanding",
+      "bullets": [
+        "Why can gas fill a container?",
+        "What happens to particles during melting?",
+        "Explain condensation in your own words."
+      ],
+      "teacherScript": "Discuss in pairs. Use the terms particles, melting and condensation. Explain your answers using the model."
+    }
+  ],
+  "quiz": [
+    {
+      "questionEn": "Which statement best describes the particle model?",
+      "choices": [
+        "Particles are always at rest.",
+        "Matter is made of tiny particles in motion.",
+        "Particles exist only in gases.",
+        "Particles never interact."
+      ],
+      "correctIndex": 1,
+      "explanationVi": "Vật chất được cấu tạo từ các hạt rất nhỏ, luôn chuyển động và có tương tác."
+    },
+    {
+      "questionEn": "In a solid, particles mainly…",
+      "choices": [
+        "disappear",
+        "move freely throughout the room",
+        "vibrate around positions",
+        "stop moving completely"
+      ],
+      "correctIndex": 2,
+      "explanationVi": "Trong chất rắn, các hạt nằm gần nhau và chủ yếu dao động quanh vị trí cân bằng."
+    },
+    {
+      "questionEn": "Melting is the change from…",
+      "choices": [
+        "solid to liquid",
+        "liquid to solid",
+        "gas to liquid",
+        "liquid to gas"
+      ],
+      "correctIndex": 0,
+      "explanationVi": "Nóng chảy là quá trình chuyển từ thể rắn sang thể lỏng."
+    },
+    {
+      "questionEn": "Which process forms water droplets from water vapour?",
+      "choices": [
+        "melting",
+        "freezing",
+        "condensation",
+        "sublimation"
+      ],
+      "correctIndex": 2,
+      "explanationVi": "Ngưng tụ là quá trình chuyển từ thể khí sang thể lỏng."
+    },
+    {
+      "questionEn": "Why can temperature remain constant during melting?",
+      "choices": [
+        "There is no energy transfer.",
+        "The absorbed energy contributes to the change of state.",
+        "Particles cease to exist.",
+        "The solid stops absorbing heat permanently."
+      ],
+      "correctIndex": 1,
+      "explanationVi": "Khi nóng chảy ở điều kiện thích hợp, năng lượng nhận được dùng cho biến đổi trạng thái; nhiệt độ có thể không đổi."
+    }
+  ],
+  "qualityWarnings": [
+    "Đây là học liệu mẫu do nhóm biên soạn dựa trên SGK trang 6–9, không phải bản AI tự trích xuất và chưa thay thế quy trình giáo viên phê duyệt.",
+    "Hình 1.1–1.8 và các đường nhiệt độ–thời gian cần đối chiếu trực tiếp PDF trước khi đưa vào slide.",
+    "Bài kiểm tra chỉ gồm 5 câu mẫu, không đại diện đánh giá đầy đủ năng lực."
+  ]
+}

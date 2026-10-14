@@ -1,0 +1,237 @@
+{
+  "catalogId": "VL12-KNTT-2024-PDF126",
+  "sourceTitle": "Vật lí 12",
+  "bookSeries": "Kết nối tri thức với cuộc sống",
+  "publisher": "Nhà xuất bản Giáo dục Việt Nam",
+  "pdfPageCount": 126,
+  "printedToPdfOffset": 1,
+  "lessons": [
+    {
+      "sortOrder": 1,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 1. Cấu trúc của chất. Sự chuyển thể",
+      "printedStart": 6,
+      "printedEnd": 9,
+      "startPage": 7,
+      "endPage": 10
+    },
+    {
+      "sortOrder": 2,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+      "printedStart": 10,
+      "printedEnd": 14,
+      "startPage": 11,
+      "endPage": 15
+    },
+    {
+      "sortOrder": 3,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 3. Nhiệt độ. Thang nhiệt độ – nhiệt kế",
+      "printedStart": 15,
+      "printedEnd": 19,
+      "startPage": 16,
+      "endPage": 20
+    },
+    {
+      "sortOrder": 4,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 4. Nhiệt dung riêng",
+      "printedStart": 20,
+      "printedEnd": 23,
+      "startPage": 21,
+      "endPage": 24
+    },
+    {
+      "sortOrder": 5,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 5. Nhiệt nóng chảy riêng",
+      "printedStart": 24,
+      "printedEnd": 26,
+      "startPage": 25,
+      "endPage": 27
+    },
+    {
+      "sortOrder": 6,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 6. Nhiệt hoá hơi riêng",
+      "printedStart": 27,
+      "printedEnd": 29,
+      "startPage": 28,
+      "endPage": 30
+    },
+    {
+      "sortOrder": 7,
+      "chapter": "Chương I. VẬT LÍ NHIỆT",
+      "title": "Bài 7. Bài tập về vật lí nhiệt",
+      "printedStart": 30,
+      "printedEnd": 32,
+      "startPage": 31,
+      "endPage": 33
+    },
+    {
+      "sortOrder": 8,
+      "chapter": "Chương II. KHÍ LÍ TƯỞNG",
+      "title": "Bài 8. Mô hình động học phân tử chất khí",
+      "printedStart": 34,
+      "printedEnd": 36,
+      "startPage": 35,
+      "endPage": 37
+    },
+    {
+      "sortOrder": 9,
+      "chapter": "Chương II. KHÍ LÍ TƯỞNG",
+      "title": "Bài 9. Định luật Boyle",
+      "printedStart": 37,
+      "printedEnd": 40,
+      "startPage": 38,
+      "endPage": 41
+    },
+    {
+      "sortOrder": 10,
+      "chapter": "Chương II. KHÍ LÍ TƯỞNG",
+      "title": "Bài 10. Định luật Charles",
+      "printedStart": 41,
+      "printedEnd": 44,
+      "startPage": 42,
+      "endPage": 45
+    },
+    {
+      "sortOrder": 11,
+      "chapter": "Chương II. KHÍ LÍ TƯỞNG",
+      "title": "Bài 11. Phương trình trạng thái của khí lí tưởng",
+      "printedStart": 45,
+      "printedEnd": 47,
+      "startPage": 46,
+      "endPage": 48
+    },
+    {
+      "sortOrder": 12,
+      "chapter": "Chương II. KHÍ LÍ TƯỞNG",
+      "title": "Bài 12. Áp suất khí theo mô hình động học phân tử. Quan hệ giữa động năng phân tử và nhiệt độ",
+      "printedStart": 48,
+      "printedEnd": 51,
+      "startPage": 49,
+      "endPage": 52
+    },
+    {
+      "sortOrder": 13,
+      "chapter": "Chương II. KHÍ LÍ TƯỞNG",
+      "title": "Bài 13. Bài tập về khí lí tưởng",
+      "printedStart": 52,
+      "printedEnd": 54,
+      "startPage": 53,
+      "endPage": 55
+    },
+    {
+      "sortOrder": 14,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 14. Từ trường",
+      "printedStart": 56,
+      "printedEnd": 60,
+      "startPage": 57,
+      "endPage": 61
+    },
+    {
+      "sortOrder": 15,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 15. Lực từ tác dụng lên dây dẫn mang dòng điện. Cảm ứng từ",
+      "printedStart": 61,
+      "printedEnd": 65,
+      "startPage": 62,
+      "endPage": 66
+    },
+    {
+      "sortOrder": 16,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 16. Từ thông. Hiện tượng cảm ứng điện từ",
+      "printedStart": 66,
+      "printedEnd": 71,
+      "startPage": 67,
+      "endPage": 72
+    },
+    {
+      "sortOrder": 17,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 17. Máy phát điện xoay chiều",
+      "printedStart": 72,
+      "printedEnd": 77,
+      "startPage": 73,
+      "endPage": 78
+    },
+    {
+      "sortOrder": 18,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 18. Ứng dụng hiện tượng cảm ứng điện từ",
+      "printedStart": 78,
+      "printedEnd": 81,
+      "startPage": 79,
+      "endPage": 82
+    },
+    {
+      "sortOrder": 19,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 19. Điện từ trường. Mô hình sóng điện từ",
+      "printedStart": 82,
+      "printedEnd": 85,
+      "startPage": 83,
+      "endPage": 86
+    },
+    {
+      "sortOrder": 20,
+      "chapter": "Chương III. TỪ TRƯỜNG",
+      "title": "Bài 20. Bài tập về từ trường",
+      "printedStart": 86,
+      "printedEnd": 89,
+      "startPage": 87,
+      "endPage": 90
+    },
+    {
+      "sortOrder": 21,
+      "chapter": "Chương IV. VẬT LÍ HẠT NHÂN",
+      "title": "Bài 21. Cấu trúc hạt nhân",
+      "printedStart": 91,
+      "printedEnd": 95,
+      "startPage": 92,
+      "endPage": 96
+    },
+    {
+      "sortOrder": 22,
+      "chapter": "Chương IV. VẬT LÍ HẠT NHÂN",
+      "title": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+      "printedStart": 96,
+      "printedEnd": 103,
+      "startPage": 97,
+      "endPage": 104
+    },
+    {
+      "sortOrder": 23,
+      "chapter": "Chương IV. VẬT LÍ HẠT NHÂN",
+      "title": "Bài 23. Hiện tượng phóng xạ",
+      "printedStart": 104,
+      "printedEnd": 113,
+      "startPage": 105,
+      "endPage": 114
+    },
+    {
+      "sortOrder": 24,
+      "chapter": "Chương IV. VẬT LÍ HẠT NHÂN",
+      "title": "Bài 24. Công nghiệp hạt nhân",
+      "printedStart": 114,
+      "printedEnd": 118,
+      "startPage": 115,
+      "endPage": 119
+    },
+    {
+      "sortOrder": 25,
+      "chapter": "Chương IV. VẬT LÍ HẠT NHÂN",
+      "title": "Bài 25. Bài tập về vật lí hạt nhân",
+      "printedStart": 119,
+      "printedEnd": 122,
+      "startPage": 120,
+      "endPage": 123
+    }
+  ],
+  "note": "Phạm vi trang từ mục lục sách trong PDF người dùng gửi. Các trang mở đầu chương không gộp vào bài; tất cả chỉ là DANH MỤC, chưa phải nội dung được duyệt.",
+  "sha256": "1bc5769d59c3b0185d458b3399ac0dd0e0b7978a4e5017c16ee2bcdf28e3791d"
+}

@@ -1,0 +1,9 @@
+BÀI MẪU: DAO ĐỘNG ĐIỀU HÒA – VẬT LÍ 11
+
+Một vật dao động điều hòa khi li độ biến thiên theo thời gian theo quy luật hình sin hoặc cosin. Trong mô hình lí tưởng, phương trình li độ có dạng x = A cos(ωt + φ), trong đó x là li độ, A là biên độ dương, ω là tần số góc dương, φ là pha ban đầu và t là thời gian. Đơn vị SI của li độ và biên độ là mét (m), của tần số góc là rad/s, của thời gian là giây (s).
+
+Chu kì T là khoảng thời gian ngắn nhất để vật lặp lại trạng thái dao động. Tần số f là số dao động toàn phần trong một giây. Mối liên hệ: T = 2π/ω và f = 1/T. Vận tốc tức thời có dạng v = −ωA sin(ωt + φ), gia tốc có dạng a = −ω²x. Trong dao động điều hòa, gia tốc luôn hướng về vị trí cân bằng (trừ khi ở vị trí cân bằng gia tốc bằng không), và độ lớn gia tốc tỉ lệ với độ lớn li độ.
+
+Các trạng thái đặc biệt: ở vị trí cân bằng x = 0 thì tốc độ đạt giá trị cực đại ωA và gia tốc bằng không; tại hai biên x = ±A thì tốc độ bằng không và độ lớn gia tốc cực đại bằng ω²A. Một ví dụ gần đúng trong điều kiện thích hợp là dao động của vật gắn với lò xo trên mặt phẳng ngang khi ma sát không đáng kể.
+
+Mục tiêu dự kiến: học sinh diễn đạt được khái niệm dao động điều hòa, xác định ý nghĩa các đại lượng trong phương trình li độ, phát biểu mối liên hệ giữa chu kì, tần số và tần số góc, mô tả sự thay đổi của vận tốc và gia tốc, và thực hành dùng từ tiếng Anh: displacement, amplitude, angular frequency, period, frequency, equilibrium position, velocity, acceleration, phase.

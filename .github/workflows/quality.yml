@@ -23,6 +23,7 @@ jobs:
       - run: npm run test:batch
       - run: npm run test:ready
       - run: npm run test:lesson-ai
+      - run: npm run test:offline
       - run: npm run typecheck
       - name: Build Next.js
         env:

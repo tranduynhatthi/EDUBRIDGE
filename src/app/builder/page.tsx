@@ -7,6 +7,7 @@ import AppShell from '@/components/AppShell';
 import RequireLogin from '@/components/RequireLogin';
 import {authorizedFetch,supabaseBrowser} from '@/lib/supabase';
 import {SUBJECT_GROUPS,isValidSubject,type SubjectName} from '@/lib/subjects';
+import {makeOfflineLesson} from '@/lib/offline-lesson';
 type Book={id:string;title:string;subject:string;grade:string;book_series:string;is_active:boolean};
 type CatalogLesson={id:string;textbook_id:string;sort_order:number;chapter:string;title:string;start_page:number;end_page:number};
 type ReadyLesson={id:string;subject:string;grade:string;slug:string;sort_order:number;chapter:string;title:string;source_text:string};
@@ -22,6 +23,7 @@ export default function BuilderPage(){
  const [readingPdf,setReadingPdf]=useState(false),[sourceWarnings,setSourceWarnings]=useState<string[]>([]);
  const [pdfStatus,setPdfStatus]=useState('');
  const [loading,setLoading]=useState(false),[catalogLoading,setCatalogLoading]=useState(true),[error,setError]=useState('');
+ const [quotaLimited,setQuotaLimited]=useState(false);
  useEffect(()=>{const requested=new URLSearchParams(window.location.search).get('subject');if(isValidSubject(requested)){setSubject(requested);setGrade(requested==='Vật lí'?'12':'10');}},[]);
  const relevantBooks=useMemo(()=>books.filter(b=>b.subject===subject&&b.grade===grade&&b.is_active),[books,subject,grade]);
  const readyAvailable=useMemo(()=>ready.filter(l=>l.subject===subject&&l.grade===grade).sort((a,b)=>a.sort_order-b.sort_order),[ready,subject,grade]);
@@ -42,7 +44,7 @@ export default function BuilderPage(){
  useEffect(()=>{if(!readyAvailable.some(l=>l.id===readyId))setReadyId(readyAvailable[0]?.id||'');},[readyAvailable,readyId]);
  useEffect(()=>{setReadyText(selectedReady?.source_text||'');},[selectedReady?.id]);
  async function createLesson(e:FormEvent){
-  e.preventDefault();setError('');
+  e.preventDefault();setError('');setQuotaLimited(false);
   if(mode==='catalog'&&!lessonId){setError('Chưa có bài SGK đã duyệt ở môn/lớp này. Hãy chọn học liệu có sẵn hoặc tự nhập nội dung.');return;}
   if(mode==='starter'&&(!selectedReady||readyText.trim().length<250)){setError('Chưa có học liệu khởi đầu phù hợp. Hãy chọn lớp khác hoặc tự nhập nội dung.');return;}
   if(mode==='teacher'&&(ownTitle.trim().length<5||ownSource.trim().length<250)){setError('Tên bài ít nhất 5 ký tự và nội dung nguồn ít nhất 250 ký tự.');return;}
@@ -56,10 +58,41 @@ export default function BuilderPage(){
    try{json=JSON.parse(rawResult) as typeof json;}catch{
      throw new Error('['+r.status+'] Máy chủ Vercel không trả JSON. Có thể yêu cầu bị ngắt hoặc hết thời gian; hãy thử tạo bài lại với nguồn ngắn hơn.');
    }
-   if(!r.ok)throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'Không thể tạo bài.'));
+   if(!r.ok){if(json.code==='GEMINI_QUOTA_LIMIT')setQuotaLimited(true);throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'Không thể tạo bài.'));}
    if(!json.id)throw new Error('[LESSON_MISSING_ID] Máy chủ chưa xác nhận đã lưu bài học.');
    router.push(`/lessons/${json.id}`);
   }catch(e){setError(e instanceof Error?e.message:'Không thể tạo bài.');}finally{setLoading(false);}
+ }
+ async function createOffline(){
+  if(loading)return;
+  setLoading(true);setError('');
+  try{
+   const api=supabaseBrowser();
+   const {data:{user},error:authError}=await api.auth.getUser();
+   if(authError||!user)throw new Error('Cần đăng nhập lại để lưu bản nháp.');
+   let title='',source='',filename='',ref:string|null=null;
+   if(mode==='starter'){
+    if(!selectedReady)throw new Error('Chưa chọn học liệu có sẵn.');
+    title=selectedReady.title;source=readyText.trim();filename='Học liệu EDUBRIDGE biên soạn độc lập – '+selectedReady.slug;
+   }else if(mode==='teacher'){
+    title=ownTitle.trim();source=ownSource.trim();filename=ownFilename;
+   }else{
+    if(!lessonId||!selectedLesson||!selectedBook)throw new Error('Chưa chọn bài SGK đã hậu kiểm.');
+    const found=await api.from('textbook_lessons').select('source_text').eq('id',lessonId).eq('is_published',true).single();
+    if(found.error||!found.data)throw new Error('Không lấy được nội dung SGK đã duyệt.');
+    title=selectedLesson.title;source=found.data.source_text||'';ref=lessonId;
+    filename=selectedBook.title+' – '+selectedBook.book_series;
+   }
+   if(title.length<5||source.length<250||source.length>25000)throw new Error('Cần tiêu đề và nguồn hợp lệ từ 250–25.000 ký tự.');
+   const generated=makeOfflineLesson(title,source);
+   const result=await api.from('lessons').insert({
+    teacher_id:user.id,textbook_lesson_id:ref,title,subject,grade,language_level:level,
+    source_text:source,source_filename:filename.slice(0,160),teacher_notes:notes,
+    generated_content:generated,model_name:'offline-template',status:'draft'
+   }).select('id').single();
+   if(result.error||!result.data?.id)throw new Error('Không lưu được bản khung vào Supabase: '+(result.error?.code||'UNKNOWN'));
+   router.push('/lessons/'+result.data.id);
+  }catch(e){setError(e instanceof Error?e.message:'Không tạo được bản khung không dùng AI.');}finally{setLoading(false);}
  }
  async function uploadOwnFile(file:File|undefined){
   if(!file)return;setError('');setSourceWarnings([]);setPdfStatus('');
@@ -138,6 +171,11 @@ export default function BuilderPage(){
  {error&&<p className="error" role="alert">{error}</p>}
  <button type="submit" className="primary-btn full" disabled={loading||(mode==='catalog'?catalogLoading||!lessonId:mode==='starter'?catalogLoading||!selectedReady||readyText.trim().length<250:readingPdf||ownTitle.trim().length<5||ownSource.trim().length<250)}>
  {loading?<><LoaderCircle className="rotating" size={19}/> Gemini đang tạo bài...</>:<><Sparkles size={18}/> Tạo bài dạy với Gemini</>}</button>
+ {quotaLimited&&<p role="status" className="muted" style={{marginTop:12}}>Hạn mức Gemini hiện không đủ. Bạn vẫn có thể tạo bản khung không dùng AI để soạn bài và chỉnh sửa.</p>}
+ <button type="button" className="secondary-btn full" style={{marginTop:10}} onClick={()=>{void createOffline();}} disabled={loading||catalogLoading||(mode==='catalog'?!lessonId:mode==='starter'?!selectedReady||readyText.trim().length<250:ownTitle.trim().length<5||ownSource.trim().length<250)}>
+ <FileText size={17}/> {loading?'Đang xử lý...':'Tạo bản khung KHÔNG dùng AI'}
+ </button>
+ <p className="muted" style={{fontSize:12,marginTop:10}}>Bản khung sắp xếp trích đoạn nguồn, không dịch thuật và không tự tạo đáp án đúng. Giáo viên phải hoàn thiện các mục [CHƯA_SOẠN] trước khi giao bài.</p>
  <p className="privacy-note"><ShieldCheck size={14}/> Bài học lưu riêng trong tài khoản.</p>
  <Link href="/dashboard" className="muted" style={{display:'block',fontSize:12,marginTop:12,textAlign:'center'}}>Quay về Tổng quan</Link>
  </section></aside></form></AppShell></RequireLogin>;

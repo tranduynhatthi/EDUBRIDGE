@@ -1,4 +1,20 @@
-# EDUBRIDGE 1.6 – Bản hiện hành (Gemini + nguồn giáo viên + tra cứu/luyện nói)
+# EDUBRIDGE 1.7 – Kiểm chứng bản đa môn (GDPT 2018)
+
+**Trạng thái mã nguồn:** Đã triển khai bản cam–trắng với trang Tổng quan cá nhân hóa, 17 môn THPT và quy trình tạo bài không yêu cầu chọn bộ sách. Đã áp dụng `supabase/07_thpt_subjects.sql` vào Supabase. Xem [hướng dẫn 1.7](docs/08_DA_MON_GDPT_2018.md).
+
+**Các bước kiểm chứng trên Production:**
+1. Đăng nhập bằng tài khoản giáo viên, mở **Tổng quan** và xác minh lời chào theo họ tên đã lưu.
+2. Chọn các môn *Toán*, *Ngữ văn*, *Vật lí*, *Lịch sử* trên trang Tổng quan; xác minh chọn môn đưa đến trang Chọn bài SGK, và trường Môn học hiển thị đúng.
+3. Ở trang Chọn bài, xác minh **không có trường bắt buộc chọn Bộ sách giáo khoa**; chọn lớp và một bài đã duyệt nếu có.
+4. Chuyển sang **Tự đưa nội dung SGK**, tải một PDF 1–10 trang hoặc dán văn bản 250–25.000 ký tự có quyền sử dụng, chỉnh sửa nguồn, nhấn Tạo bài với Gemini.
+5. Hậu kiểm các slide/đáp án và xác nhận bài lưu đúng tên môn; xuất PPTX và thử từ điển/luyện nói.
+6. Xác nhận email mới chuyển về tên miền Production chứ không phải localhost: cấu hình **Supabase Authentication → URL Configuration** vẫn phải đặt thủ công.
+   
+**Chưa nghiệm thu đầu cuối:** Build tự động/READY không thay thế kiểm thử tài khoản, Gemini API, PDF nguồn và cơ chế xác nhận email trên môi trường thật.
+
+---
+
+## Lịch sử tính năng 1.6 (Gemini + nguồn giáo viên + tra cứu/luyện nói)
 
 **Các chức năng mới:** Giáo viên được tự đưa nội dung bài SGK vào (dán văn bản, tải TXT/MD, PDF 1–10 trang) hoặc chọn bài trong kho đã duyệt; từ điển và luyện nói tra từ/câu bất kỳ bằng Gemini, không phụ thuộc bài đã lưu. Đăng ký có trang `/auth/confirm`. Kho 25 bài SGK Vật lí 12 vẫn dùng cơ chế hậu kiểm trước khi công bố.
 

@@ -35,7 +35,7 @@ async function readGemini(part:Uint8Array,job:Job,apiKey:string){
   if(!raw.trim())throw new Error("GEMINI_EMPTY_"+(data.candidates?.[0]?.finishReason||"RESPONSE"));
   let notes:unknown;try{notes=JSON.parse(raw);}catch{throw new Error("GEMINI_INVALID_JSON");}
   if(!notes||typeof notes!=="object"||typeof (notes as {sourceText?:unknown}).sourceText!=="string"||!Array.isArray((notes as {warnings?:unknown}).warnings))throw new Error("GEMINI_NOTES_SCHEMA");
-  return {sourceText:(notes as {sourceText:string}).sourceText.trim().slice(0,30000),
+  return {sourceText:(notes as {sourceText:string}).sourceText.trim(),
    warnings:(notes as {warnings:unknown[]}).warnings.filter(x=>typeof x==="string").map(x=>String(x).slice(0,350)).slice(0,20)};
  }finally{clearTimeout(timer);}
 }

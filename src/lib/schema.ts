@@ -5,6 +5,7 @@ export const CatalogRequestSchema = z.object({
   textbookLessonId: z.string().uuid(),
   languageLevel: z.enum(['A2', 'B1', 'B2']),
   teacherNotes: z.string().max(1500),
+  generationMode:z.enum(['standard','advanced']).optional().default('standard'),
 });
 export type LessonRequest = z.infer<typeof CatalogRequestSchema>;
 export const TeacherSourceRequestSchema=z.object({
@@ -16,6 +17,7 @@ export const TeacherSourceRequestSchema=z.object({
  sourceText:z.string().trim().min(250).max(25000),
  sourceFilename:z.string().trim().max(160).optional().default('Nội dung giáo viên cung cấp'),
  teacherNotes:z.string().max(1500),
+ generationMode:z.enum(['standard','advanced']).optional().default('standard'),
 });
 
 // Structured Outputs: simple closed objects/arrays only, to maximize model compatibility.

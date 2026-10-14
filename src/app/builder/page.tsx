@@ -18,6 +18,7 @@ export default function BuilderPage(){
  const [ready,setReady]=useState<ReadyLesson[]>([]),[readyId,setReadyId]=useState(''),[readyText,setReadyText]=useState('');
  const [lessonId,setLessonId]=useState(''),[level,setLevel]=useState<'A2'|'B1'|'B2'>('B1');
  const [notes,setNotes]=useState('Sử dụng tiếng Anh dễ hiểu, có câu hỏi tương tác, giữ nguyên thuật ngữ và kiến thức của nguồn.');
+ const [generationMode,setGenerationMode]=useState<'standard'|'advanced'>('standard');
  const [mode,setMode]=useState<'starter'|'catalog'|'teacher'>('starter');
  const [ownTitle,setOwnTitle]=useState(''),[ownSource,setOwnSource]=useState(''),[ownFilename,setOwnFilename]=useState('Nội dung giáo viên cung cấp');
  const [readingPdf,setReadingPdf]=useState(false),[sourceWarnings,setSourceWarnings]=useState<string[]>([]);
@@ -49,9 +50,9 @@ export default function BuilderPage(){
   if(mode==='starter'&&(!selectedReady||readyText.trim().length<250)){setError('Chưa có học liệu khởi đầu phù hợp. Hãy chọn lớp khác hoặc tự nhập nội dung.');return;}
   if(mode==='teacher'&&(ownTitle.trim().length<5||ownSource.trim().length<250)){setError('Tên bài ít nhất 5 ký tự và nội dung nguồn ít nhất 250 ký tự.');return;}
   setLoading(true);
-  try{const payload=mode==='catalog'?{textbookLessonId:lessonId,languageLevel:level,teacherNotes:notes}:
-   mode==='starter'?{mode:'teacher',title:selectedReady!.title,subject,grade,languageLevel:level,teacherNotes:notes,sourceText:readyText.trim(),sourceFilename:'Học liệu EDUBRIDGE biên soạn độc lập – '+selectedReady!.slug}:
-   {mode:'teacher',title:ownTitle.trim(),subject,grade,languageLevel:level,teacherNotes:notes,sourceText:ownSource.trim(),sourceFilename:ownFilename};
+  try{const payload=mode==='catalog'?{textbookLessonId:lessonId,languageLevel:level,teacherNotes:notes,generationMode}:
+   mode==='starter'?{mode:'teacher',title:selectedReady!.title,subject,grade,languageLevel:level,teacherNotes:notes,sourceText:readyText.trim(),sourceFilename:'Học liệu EDUBRIDGE biên soạn độc lập – '+selectedReady!.slug,generationMode}:
+   {mode:'teacher',title:ownTitle.trim(),subject,grade,languageLevel:level,teacherNotes:notes,sourceText:ownSource.trim(),sourceFilename:ownFilename,generationMode};
    const r=await authorizedFetch('/api/ai/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const rawResult=await r.text();
    let json:{id?:string;error?:string;code?:string};
@@ -158,7 +159,12 @@ export default function BuilderPage(){
  </div>}</section>
  <section className="white-panel form-section"><h2><span className="step-dot">2</span> Tùy chỉnh bài dạy</h2>
  <div className="form-grid"><label className="field">Mức tiếng Anh<select value={level} onChange={e=>setLevel(e.target.value as 'A2'|'B1'|'B2')}>
- <option value="A2">A2 – Cơ bản</option><option value="B1">B1 – Trung bình</option><option value="B2">B2 – Khá</option></select></label></div>
+ <option value="A2">A2 – Cơ bản</option><option value="B1">B1 – Trung bình</option><option value="B2">B2 – Khá</option></select></label>
+ <label className="field">Mô hình Gemini<select value={generationMode} onChange={e=>setGenerationMode(e.target.value as 'standard'|'advanced')}>
+ <option value="standard">Tiêu chuẩn · Gemini 3.5 Flash-Lite (mặc định)</option>
+ <option value="advanced">Chuyên sâu · Gemini 3.8 Flash</option>
+ </select></label></div>
+ <p className="muted" style={{marginTop:9}}>Tạo bài thông thường dùng Gemini 3.5 Flash-Lite. Chọn “Chuyên sâu” mới dùng Gemini 3.8 Flash (hạn mức khác). Đọc PDF vẫn sử dụng Gemini 3.8 Flash.</p>
  <label className="field" style={{marginTop:18}}>Yêu cầu bổ sung<textarea rows={4} maxLength={1500} value={notes} onChange={e=>setNotes(e.target.value)}/></label>
  </section></div>
  <aside className="form-aside"><section className="white-panel preview-panel"><div className="aside-title"><Sparkles size={20}/> EDUBRIDGE AI</div>

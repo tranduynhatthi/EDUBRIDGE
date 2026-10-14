@@ -2,6 +2,7 @@ import {generateGeminiJson,lessonJsonSchema,describeGeminiError} from '@/lib/gem
 import { CatalogRequestSchema, TeacherSourceRequestSchema, LessonResultSchema } from '@/lib/schema';
 import { requireTeacher, authFailure } from '@/lib/server-auth';
 import {isValidSubject} from '@/lib/subjects';
+import {selectGeminiModel} from '@/lib/gemini-models';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // Check hosting plan/Fluid Compute limits.
@@ -22,12 +23,15 @@ export async function POST(request: Request) {
     return Response.json({error:'Chưa cấu hình GEMINI_API_KEY trên máy chủ.',code:'MISSING_GEMINI_KEY'},{status:503});
 
   let data:{title:string;subject:string;grade:string;languageLevel:'A2'|'B1'|'B2';sourceText:string;sourceFilename:string;teacherNotes:string;textbookLessonId:string|null};
+  let generationMode:'standard'|'advanced'='standard';
   if(custom.success){
+    generationMode=custom.data.generationMode;
     data={title:custom.data.title,subject:custom.data.subject,grade:custom.data.grade,languageLevel:custom.data.languageLevel,
       sourceText:custom.data.sourceText,sourceFilename:custom.data.sourceFilename,
       teacherNotes:custom.data.teacherNotes,textbookLessonId:null};
   }else{
-    const incoming = (catalog as {success:true;data:{textbookLessonId:string;languageLevel:'A2'|'B1'|'B2';teacherNotes:string}}).data;
+    const incoming = (catalog as {success:true;data:{textbookLessonId:string;languageLevel:'A2'|'B1'|'B2';teacherNotes:string;generationMode:'standard'|'advanced'}}).data;
+    generationMode=incoming.generationMode;
     // Only approved catalog lessons may be used on the catalog path.
     const {data:lesson,error:lessonError}=await auth.supabase.from('textbook_lessons')
       .select('id,title,source_text,start_page,end_page,is_published,textbooks!inner(title,subject,grade,book_series,is_active)')
@@ -41,7 +45,8 @@ export async function POST(request: Request) {
       sourceFilename:`${book.title} – ${book.book_series}, PDF trang ${lesson.start_page}-${lesson.end_page}`,
       teacherNotes:incoming.teacherNotes,textbookLessonId:lesson.id};
   }
-  const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  // User-selected advanced only; ignore the Vercel legacy GEMINI_MODEL for normal requests.
+  const model = selectGeminiModel(generationMode);
   try {
     const generated=await generateGeminiJson({
       model,

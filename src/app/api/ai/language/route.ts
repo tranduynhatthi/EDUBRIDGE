@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {requireTeacher,authFailure} from '@/lib/server-auth';
 import {generateGeminiJson} from '@/lib/gemini';
+import {selectGeminiModel} from '@/lib/gemini-models';
 export const runtime='nodejs';
 export const maxDuration=60;
 const RequestSchema=z.object({kind:z.enum(['term','phrase']),query:z.string().trim().min(2).max(350)});
@@ -18,7 +19,7 @@ export async function POST(request:Request){
  const {kind,query}=check.data;
  try{
   const output=await generateGeminiJson({
-   model:process.env.GEMINI_MODEL||'gemini-3.8-flash',
+   model:selectGeminiModel('standard'),
    instructions:kind==='term'
     ? 'Bạn là từ điển thuật ngữ các môn THPT Anh–Việt. Trả nghĩa chính xác ngắn gọn cho thuật ngữ do người học gõ, dù chưa có trong SGK đã lưu. Nếu đầu vào tiếng Việt hãy tìm thuật ngữ tiếng Anh tương ứng. Cung cấp định nghĩa tiếng Việt và tiếng Anh, ví dụ đúng ngữ cảnh môn học bằng tiếng Anh và gợi ý đọc ngắn. Nếu từ đa nghĩa, nêu phạm vi sử dụng, không bịa.'
     : 'Bạn là trợ lý luyện nói tiếng Anh EMI/CLIL cho giáo viên THPT. Với một câu/cụm từ bất kỳ do giáo viên gõ bằng tiếng Việt hoặc tiếng Anh, đưa câu tiếng Anh tự nhiên, đúng ngữ pháp, bản dịch tiếng Việt và một gợi ý nhấn trọng âm hoặc nói rõ ngắn gọn. Không tạo nội dung thiếu an toàn.',

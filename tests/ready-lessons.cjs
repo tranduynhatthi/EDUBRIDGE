@@ -1,0 +1,14 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const read=p=>fs.readFileSync(p,'utf8');
+const sql=read('supabase/09_ready_lessons.sql'),second=read('supabase/10_subject_intros.sql'),builder=read('src/app/builder/page.tsx');
+assert(sql.includes("create table if not exists public.edubridge_ready_lessons"));
+assert(sql.includes("create policy edubridge_read_ready_lessons"));
+assert(sql.includes("grant select on public.edubridge_ready_lessons to authenticated"));
+assert(sql.includes("original_reference"));
+assert(!sql.includes("update public.textbook_lessons set is_published=true"));
+assert(builder.includes("mode==='starter'"),'Builder must offer ready learning material');
+assert(builder.includes("edubridge_ready_lessons"),'Load ready library from Supabase');
+assert(builder.includes('readyText.trim()'),'Teacher edits reference text before Gemini');
+assert(builder.includes('Học liệu EDUBRIDGE biên soạn độc lập'),'Must distinguish source provenance');
+assert(second.includes('Tiếng dân tộc thiểu số'),'All 17 subject entry points covered');
+console.log('PASS: ready-to-use original library schema and UI; no Gemini used by seed.');

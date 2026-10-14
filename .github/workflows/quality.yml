@@ -21,6 +21,7 @@ jobs:
       - run: npm run test:extraction
       - run: npm run test:teacher-pdf
       - run: npm run test:batch
+      - run: npm run test:ready
       - run: npm run typecheck
       - name: Build Next.js
         env:

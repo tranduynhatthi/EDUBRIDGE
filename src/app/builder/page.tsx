@@ -9,37 +9,46 @@ import {authorizedFetch,supabaseBrowser} from '@/lib/supabase';
 import {SUBJECT_GROUPS,isValidSubject,type SubjectName} from '@/lib/subjects';
 type Book={id:string;title:string;subject:string;grade:string;book_series:string;is_active:boolean};
 type CatalogLesson={id:string;textbook_id:string;sort_order:number;chapter:string;title:string;start_page:number;end_page:number};
+type ReadyLesson={id:string;subject:string;grade:string;slug:string;sort_order:number;chapter:string;title:string;source_text:string};
 export default function BuilderPage(){
  const router=useRouter();
  const [subject,setSubject]=useState<SubjectName>('Vật lí'),[grade,setGrade]=useState<'10'|'11'|'12'>('12');
  const [books,setBooks]=useState<Book[]>([]),[catalog,setCatalog]=useState<CatalogLesson[]>([]);
+ const [ready,setReady]=useState<ReadyLesson[]>([]),[readyId,setReadyId]=useState(''),[readyText,setReadyText]=useState('');
  const [lessonId,setLessonId]=useState(''),[level,setLevel]=useState<'A2'|'B1'|'B2'>('B1');
  const [notes,setNotes]=useState('Sử dụng tiếng Anh dễ hiểu, có câu hỏi tương tác, giữ nguyên thuật ngữ và kiến thức của nguồn.');
- const [mode,setMode]=useState<'catalog'|'teacher'>('teacher');
+ const [mode,setMode]=useState<'starter'|'catalog'|'teacher'>('starter');
  const [ownTitle,setOwnTitle]=useState(''),[ownSource,setOwnSource]=useState(''),[ownFilename,setOwnFilename]=useState('Nội dung giáo viên cung cấp');
  const [readingPdf,setReadingPdf]=useState(false),[sourceWarnings,setSourceWarnings]=useState<string[]>([]);
  const [pdfStatus,setPdfStatus]=useState('');
  const [loading,setLoading]=useState(false),[catalogLoading,setCatalogLoading]=useState(true),[error,setError]=useState('');
- useEffect(()=>{const requested=new URLSearchParams(window.location.search).get('subject');if(isValidSubject(requested))setSubject(requested);},[]);
+ useEffect(()=>{const requested=new URLSearchParams(window.location.search).get('subject');if(isValidSubject(requested)){setSubject(requested);setGrade(requested==='Vật lí'?'12':'10');}},[]);
  const relevantBooks=useMemo(()=>books.filter(b=>b.subject===subject&&b.grade===grade&&b.is_active),[books,subject,grade]);
+ const readyAvailable=useMemo(()=>ready.filter(l=>l.subject===subject&&l.grade===grade).sort((a,b)=>a.sort_order-b.sort_order),[ready,subject,grade]);
+ const selectedReady=readyAvailable.find(l=>l.id===readyId);
  const availableLessons=useMemo(()=>{const ids=new Set(relevantBooks.map(b=>b.id));return catalog.filter(l=>ids.has(l.textbook_id)).sort((a,b)=>a.title.localeCompare(b.title,'vi'));},[catalog,relevantBooks]);
  const selectedLesson=availableLessons.find(l=>l.id===lessonId);
  const selectedBook=books.find(b=>b.id===selectedLesson?.textbook_id);
  useEffect(()=>{let active=true;(async()=>{try{
-  const [b,l]=await Promise.all([
+  const [b,l,starter]=await Promise.all([
    supabaseBrowser().from('textbooks').select('id,title,subject,grade,book_series,is_active').eq('is_active',true).order('grade'),
-   supabaseBrowser().from('textbook_lessons').select('id,textbook_id,sort_order,chapter,title,start_page,end_page').eq('is_published',true).order('sort_order')
-  ]);if(b.error)throw b.error;if(l.error)throw l.error;
-  if(active){setBooks(b.data||[]);setCatalog(l.data||[]);}
+   supabaseBrowser().from('textbook_lessons').select('id,textbook_id,sort_order,chapter,title,start_page,end_page').eq('is_published',true).order('sort_order'),
+   supabaseBrowser().from('edubridge_ready_lessons').select('id,slug,subject,grade,sort_order,chapter,title,source_text').eq('is_active',true).order('sort_order')
+  ]);if(b.error)throw b.error;if(l.error)throw l.error;if(starter.error)throw starter.error;
+  if(active){setBooks(b.data||[]);setCatalog(l.data||[]);setReady(starter.data||[]);}
  }catch(e){if(active)setError(e instanceof Error?e.message:'Không tải được kho học liệu đã duyệt.');}
  finally{if(active)setCatalogLoading(false);}})();return()=>{active=false;};},[]);
  useEffect(()=>{if(!availableLessons.some(l=>l.id===lessonId))setLessonId(availableLessons[0]?.id||'');},[availableLessons,lessonId]);
+ useEffect(()=>{if(!readyAvailable.some(l=>l.id===readyId))setReadyId(readyAvailable[0]?.id||'');},[readyAvailable,readyId]);
+ useEffect(()=>{setReadyText(selectedReady?.source_text||'');},[selectedReady?.id]);
  async function createLesson(e:FormEvent){
   e.preventDefault();setError('');
-  if(mode==='catalog'&&!lessonId){setError('Chưa có bài được duyệt ở môn/lớp này. Hãy chọn Tự đưa nội dung SGK.');return;}
+  if(mode==='catalog'&&!lessonId){setError('Chưa có bài SGK đã duyệt ở môn/lớp này. Hãy chọn học liệu có sẵn hoặc tự nhập nội dung.');return;}
+  if(mode==='starter'&&(!selectedReady||readyText.trim().length<250)){setError('Chưa có học liệu khởi đầu phù hợp. Hãy chọn lớp khác hoặc tự nhập nội dung.');return;}
   if(mode==='teacher'&&(ownTitle.trim().length<5||ownSource.trim().length<250)){setError('Tên bài ít nhất 5 ký tự và nội dung nguồn ít nhất 250 ký tự.');return;}
   setLoading(true);
   try{const payload=mode==='catalog'?{textbookLessonId:lessonId,languageLevel:level,teacherNotes:notes}:
+   mode==='starter'?{mode:'teacher',title:selectedReady!.title,subject,grade,languageLevel:level,teacherNotes:notes,sourceText:readyText.trim(),sourceFilename:'Học liệu EDUBRIDGE biên soạn độc lập – '+selectedReady!.slug}:
    {mode:'teacher',title:ownTitle.trim(),subject,grade,languageLevel:level,teacherNotes:notes,sourceText:ownSource.trim(),sourceFilename:ownFilename};
    const r=await authorizedFetch('/api/ai/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const json=await r.json();if(!r.ok)throw new Error(json.error||'Không thể tạo bài.');
@@ -70,7 +79,7 @@ export default function BuilderPage(){
  }
  return <RequireLogin><AppShell subtitle="Chọn bài từ sách giáo khoa">
  <div className="page-heading"><div><div className="eyebrow">EDUBRIDGE / LESSON BUILDER</div>
- <h1>Chọn bài từ sách giáo khoa</h1><p>Chọn môn và bài đã được duyệt, hoặc tự đưa nội dung SGK lên để tạo giáo án với Gemini.</p></div><div className="header-symbol"><LibraryBig size={29}/></div></div>
+ <h1>Chọn bài học – có sẵn sau đăng nhập</h1><p>Chọn học liệu EDUBRIDGE đã lưu trong cơ sở dữ liệu, không cần tải sách. Bài trích từ SGK sẽ được hiển thị riêng sau khi đã hậu kiểm.</p></div><div className="header-symbol"><LibraryBig size={29}/></div></div>
  <form className="builder-grid" onSubmit={createLesson}>
  <div className="form-main">
  <section className="white-panel form-section"><h2><span className="step-dot">1</span> Môn học và nguồn bài</h2>
@@ -80,9 +89,18 @@ export default function BuilderPage(){
  <label className="field">Lớp<select value={grade} onChange={e=>setGrade(e.target.value as '10'|'11'|'12')}>
  <option value="10">Lớp 10</option><option value="11">Lớp 11</option><option value="12">Lớp 12</option></select></label></div>
  <div className="action-row" style={{margin:'20px 0'}}>
- <button className={mode==='catalog'?'primary-btn':'secondary-btn'} type="button" onClick={()=>{setMode('catalog');setError('');}}>Chọn bài có sẵn</button>
+ <button className={mode==='starter'?'primary-btn':'secondary-btn'} type="button" onClick={()=>{setMode('starter');setError('');}}>Học liệu có sẵn</button>
+ <button className={mode==='catalog'?'primary-btn':'secondary-btn'} type="button" onClick={()=>{setMode('catalog');setError('');}}>SGK đã hậu kiểm</button>
  <button className={mode==='teacher'?'primary-btn':'secondary-btn'} type="button" onClick={()=>{setMode('teacher');setError('');}}>Tự đưa nội dung SGK</button></div>
- {mode==='catalog'?<>
+ {mode==='starter'?<>
+ <label className="field">Bài học đã tích hợp<select value={readyId} onChange={e=>setReadyId(e.target.value)} disabled={catalogLoading||readyAvailable.length===0}>
+ {readyAvailable.length===0?<option value="">Chưa có học liệu khởi đầu cho môn và lớp này</option>:readyAvailable.map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
+ {selectedReady?<div style={{marginTop:14}}>
+ <div className="catalog-selection"><BookOpen size={20}/><div><strong>{selectedReady.title}</strong><p>{subject} · Lớp {grade} · {selectedReady.chapter}</p><small>Học liệu gốc do EDUBRIDGE biên soạn, không phải bản trích hay nội dung SGK đã hậu kiểm.</small></div></div>
+ <label className="field" style={{marginTop:15}}>Nội dung học liệu – có thể xem và chỉnh sửa trước khi tạo bài<textarea rows={12} maxLength={25000} value={readyText} onChange={e=>setReadyText(e.target.value)}/></label>
+ <p className="muted">{readyText.length.toLocaleString('vi-VN')} ký tự. Bạn có thể tự điều chỉnh nội dung cho phù hợp thực tế giảng dạy. Việc nhấn Tạo bài với Gemini mới sử dụng API.</p>
+ </div>:<div className="warning-box"><Info size={18}/><span>Chưa có học liệu sẵn cho lựa chọn này. Hãy chọn lớp khác hoặc dùng Tự nhập nội dung.</span></div>}
+ </>:mode==='catalog'?<>
  <label className="field">Bài học đã duyệt<select value={lessonId} onChange={e=>setLessonId(e.target.value)} disabled={catalogLoading||availableLessons.length===0}>
  {availableLessons.length===0?<option value="">Chưa có bài được duyệt ở môn/lớp này</option>:availableLessons.map(l=><option key={l.id} value={l.id}>{l.title}{l.chapter?` · ${l.chapter}`:''}</option>)}</select></label>
  {selectedLesson&&selectedBook?<div className="catalog-selection"><BookOpen size={21}/><div>
@@ -112,7 +130,7 @@ export default function BuilderPage(){
  <li><FileText size={16}/> Câu giao tiếp và câu hỏi kiểm tra</li></ul>
  <div className="warning-box"><Info size={18}/><span>AI chỉ sử dụng nội dung bạn chọn hoặc đưa lên. Giáo viên cần kiểm duyệt độ chính xác trước khi giảng dạy.</span></div>
  {error&&<p className="error" role="alert">{error}</p>}
- <button type="submit" className="primary-btn full" disabled={loading||(mode==='catalog'?catalogLoading||!lessonId:readingPdf||ownTitle.trim().length<5||ownSource.trim().length<250)}>
+ <button type="submit" className="primary-btn full" disabled={loading||(mode==='catalog'?catalogLoading||!lessonId:mode==='starter'?catalogLoading||!selectedReady||readyText.trim().length<250:readingPdf||ownTitle.trim().length<5||ownSource.trim().length<250)}>
  {loading?<><LoaderCircle className="rotating" size={19}/> Gemini đang tạo bài...</>:<><Sparkles size={18}/> Tạo bài dạy với Gemini</>}</button>
  <p className="privacy-note"><ShieldCheck size={14}/> Bài học lưu riêng trong tài khoản.</p>
  <Link href="/dashboard" className="muted" style={{display:'block',fontSize:12,marginTop:12,textAlign:'center'}}>Quay về Tổng quan</Link>

@@ -51,7 +51,13 @@ export default function BuilderPage(){
    mode==='starter'?{mode:'teacher',title:selectedReady!.title,subject,grade,languageLevel:level,teacherNotes:notes,sourceText:readyText.trim(),sourceFilename:'Học liệu EDUBRIDGE biên soạn độc lập – '+selectedReady!.slug}:
    {mode:'teacher',title:ownTitle.trim(),subject,grade,languageLevel:level,teacherNotes:notes,sourceText:ownSource.trim(),sourceFilename:ownFilename};
    const r=await authorizedFetch('/api/ai/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-   const json=await r.json();if(!r.ok)throw new Error(json.error||'Không thể tạo bài.');
+   const rawResult=await r.text();
+   let json:{id?:string;error?:string;code?:string};
+   try{json=JSON.parse(rawResult) as typeof json;}catch{
+     throw new Error('['+r.status+'] Máy chủ Vercel không trả JSON. Có thể yêu cầu bị ngắt hoặc hết thời gian; hãy thử tạo bài lại với nguồn ngắn hơn.');
+   }
+   if(!r.ok)throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'Không thể tạo bài.'));
+   if(!json.id)throw new Error('[LESSON_MISSING_ID] Máy chủ chưa xác nhận đã lưu bài học.');
    router.push(`/lessons/${json.id}`);
   }catch(e){setError(e instanceof Error?e.message:'Không thể tạo bài.');}finally{setLoading(false);}
  }

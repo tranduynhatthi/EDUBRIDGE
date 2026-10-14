@@ -182,12 +182,14 @@ export function describeGeminiError(err:unknown):{code:string;message:string;sta
   INVALID_MODEL:'Tên model Gemini cấu hình không hợp lệ.',
   GEMINI_QUOTA_LIMIT:'Gemini đã hết hạn mức API hoặc vượt giới hạn số lần gọi. Kiểm tra Usage/Billing ở Google AI Studio.',
   GEMINI_KEY_OR_PERMISSION:'Khóa Gemini API không hợp lệ hoặc dự án Google không được cấp quyền gọi model.',
-  GEMINI_MODEL_NOT_FOUND:'Không tìm thấy model Gemini. Kiểm tra GEMINI_VISION_MODEL trong Vercel.',
-  GEMINI_BAD_REQUEST:'Google từ chối cấu trúc yêu cầu Gemini (HTTP 400). Hãy thử model hỗ trợ PDF và cấu hình lại API.',
+  GEMINI_MODEL_NOT_FOUND:'Không tìm thấy model Gemini. Kiểm tra GEMINI_MODEL hoặc GEMINI_VISION_MODEL trên Vercel.',
+  GEMINI_BAD_REQUEST:'Gemini từ chối yêu cầu (HTTP 400). Kiểm tra model, định dạng JSON và giới hạn dữ liệu.',
   GEMINI_SERVER_BUSY:'Máy chủ Gemini tạm thời quá tải. Hãy thử lại sau ít phút.',
   GEMINI_BLOCKED:'Gemini đã chặn phản hồi do bộ lọc nội dung.',
-  GEMINI_INVALID_JSON:'Gemini trả về dữ liệu không đọc được thành JSON. Hãy thử lại.',
-  GEMINI_TIMEOUT:'Gemini xử lý PDF quá thời gian. Hãy thử với ít trang hơn.',
+  GEMINI_INVALID_JSON:'Gemini trả về JSON chưa hoàn chỉnh. Hãy giảm độ dài bài dạy hoặc thử lại.',
+  GEMINI_OUTPUT_TRUNCATED:'Gemini đã dừng khi đạt giới hạn token trước khi hoàn thành bài. Hãy thử lại với nội dung nguồn ngắn hơn.',
+  GEMINI_INVALID_API_RESPONSE:'Gemini trả về phản hồi API không hợp lệ. Hãy thử lại.',
+  GEMINI_TIMEOUT:'Gemini xử lý quá thời gian. Hãy thử lại hoặc giảm lượng nội dung nguồn.',
   GEMINI_UNKNOWN_ERROR:'Không thể gọi Gemini. Kiểm tra mạng, API key, quyền model và hạn mức.'
  };
  const message=messages[code]??(code.startsWith('GEMINI_EMPTY_')?
@@ -212,10 +214,12 @@ export async function generateGeminiJson(options:{model:string;instructions:stri
   if(response.status===401||response.status===403)throw new GeminiRequestError('GEMINI_KEY_OR_PERMISSION');
   if(response.status===404)throw new GeminiRequestError('GEMINI_MODEL_NOT_FOUND');
   throw new GeminiRequestError('GEMINI_HTTP_'+response.status);}
- const payload=await response.json() as GeminiPayload;
+ let payload:GeminiPayload;
+ try{payload=await response.json() as GeminiPayload;}catch{throw new GeminiRequestError('GEMINI_INVALID_API_RESPONSE');}
  if(payload.promptFeedback?.blockReason)throw new GeminiRequestError('GEMINI_BLOCKED');
  const candidate=payload.candidates?.[0];
  const raw=(candidate?.content?.parts??[]).map(p=>p.text??'').join('');
+ if(candidate?.finishReason==='MAX_TOKENS')throw new GeminiRequestError('GEMINI_OUTPUT_TRUNCATED');
  if(!raw.trim())throw new GeminiRequestError('GEMINI_EMPTY_'+(candidate?.finishReason??'UNKNOWN'));
  try{return JSON.parse(raw);}catch{throw new GeminiRequestError('GEMINI_INVALID_JSON');}
 }

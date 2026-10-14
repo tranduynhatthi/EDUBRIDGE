@@ -1,6 +1,6 @@
 {
   "name": "edubridge-mvp-vatli12-select-lesson",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,8 @@
     "test:extraction": "node tests/extraction-review.cjs",
     "test:teacher-pdf": "node tests/teacher-pdf.cjs",
     "test:batch": "node tests/batch-import.cjs",
-    "test:ready": "node tests/ready-lessons.cjs"
+    "test:ready": "node tests/ready-lessons.cjs",
+    "test:lesson-ai": "node tests/lesson-ai-errors.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

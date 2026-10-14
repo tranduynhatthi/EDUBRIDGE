@@ -9,7 +9,7 @@ const W=13.333,H=7.5;
 const C={orange:'EA580C',deep:'9A3412',coral:'F97316',soft:'FFEDD5',cream:'FFFBF7',paper:'FFFFFF',line:'FED7AA',dark:'292524',ink:'44403C',muted:'78716C',amber:'FDBA74'};
 const font='Aptos',display='Aptos Display';
 function txt(s:Slide,value:string,x:number,y:number,w:number,h:number,extra:Record<string,unknown>={}){
- s.addText(value,{x,y,w,h,fontFace:font,fontSize:20,color:C.dark,margin:0,valign:'mid',breakLine:false,...extra} as Parameters<Slide['addText']>[1]);
+ s.addText(value,{x,y,w,h,fontFace:font,fontSize:20,color:C.dark,margin:0,breakLine:false,...extra} as Parameters<Slide['addText']>[1]);
 }
 function rect(s:Slide,x:number,y:number,w:number,h:number,fill:string,round=false,stroke?:string){
  s.addShape((round?'roundRect':'rect') as Parameters<Slide['addShape']>[0],{x,y,w,h,rectRadius:0.17,line:{color:stroke||fill,width:stroke?0.8:0},fill:{color:fill}} as Parameters<Slide['addShape']>[1]);
@@ -222,7 +222,7 @@ export function classifySlide(slide:ContentSlide,index:number,total:number):Slid
  return index%3===0?'concept':index%3===1?'process':'comparison';
 }
 export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Promise<Buffer>{
- const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='EDUBRIDGE';pptx.lang='en-US';
+ const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='EDUBRIDGE';
  pptx.subject=info.subject+' · Grade '+info.grade+' · EMI/CLIL';pptx.title=info.title;
  const slideItems=result.slides.slice(0,14);
  const vocabularyGroups:LessonResult['vocabulary'][]=[];

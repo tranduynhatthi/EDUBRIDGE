@@ -96,12 +96,25 @@ export const lessonJsonSchema = {
           },
           "teacherScript": {
             "type": "string"
-          }
+          },
+          "slideType": {
+            "type": "string",
+            "enum": ["warmup","concept","process","comparison","diagram","formula","example","activity","summary"]
+          },
+          "keyMessage": {"type":"string"},
+          "studentTask": {"type":"string"},
+          "visualSuggestion": {"type":"string"},
+          "formula": {"type":"string"}
         },
         "required": [
           "title",
           "bullets",
-          "teacherScript"
+          "teacherScript",
+          "slideType",
+          "keyMessage",
+          "studentTask",
+          "visualSuggestion",
+          "formula"
         ]
       }
     },

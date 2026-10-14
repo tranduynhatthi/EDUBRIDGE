@@ -28,7 +28,12 @@ export const LessonResultSchema = z.object({
   keyConcepts: z.array(z.object({vi: z.string(), en: z.string()})),
   vocabulary: z.array(z.object({termEn: z.string(), termVi: z.string(), definitionEn: z.string(), exampleEn: z.string()})),
   classroomPhrases: z.array(z.object({english: z.string(), vietnamese: z.string()})),
-  slides: z.array(z.object({title: z.string(), bullets: z.array(z.string()), teacherScript: z.string()})),
+  slides: z.array(z.object({
+    title:z.string(),bullets:z.array(z.string()),teacherScript:z.string(),
+    slideType:z.enum(['warmup','concept','process','comparison','diagram','formula','example','activity','summary']).optional(),
+    keyMessage:z.string().optional(),studentTask:z.string().optional(),
+    visualSuggestion:z.string().optional(),formula:z.string().optional()
+  })),
   quiz: z.array(z.object({questionEn: z.string(), choices: z.array(z.string()), correctIndex: z.number().int(), explanationVi: z.string()})),
   qualityWarnings: z.array(z.string()),
 });

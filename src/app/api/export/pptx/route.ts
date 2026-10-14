@@ -25,7 +25,6 @@ export async function POST(request: Request) {
     deck.author = 'EDUBRIDGE';
     deck.subject = 'Bài giảng Vật lí bằng tiếng Anh';
     deck.title = record.title;
-    deck.lang = 'en-US';
     const width = 13.333, height = 7.5;
     const navy = '14254A', accent = 'E34952', muted = '667085';
     const make = (heading: string, order: number) => {

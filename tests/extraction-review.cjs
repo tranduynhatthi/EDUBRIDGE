@@ -11,7 +11,7 @@ assert(route.includes("source_text',''"),'AI must never overwrite an existing so
 assert(ui.includes("json.draftSourceText"),'UI must allow teacher to inspect/edit partial PDF extraction');
 const program=[
  "import {reviewExtractedNotes} from "+JSON.stringify('file://')+"+process.argv[1];",
- "const r=reviewExtractedNotes({sourceText:'  Vật lí\u0000   ',warnings:['  Trang 120 đọc chưa rõ.  ','']});",
+ "const r=reviewExtractedNotes({sourceText:'  Vật lí '+String.fromCharCode(0)+'   ',warnings:['  Trang 120 đọc chưa rõ.  ','']});",
  "if(r.text!=='Vật lí')throw Error('Text not preserved');",
  "if(r.warnings.length!==1||r.warnings[0]!=='Trang 120 đọc chưa rõ.')throw Error('Warning not preserved');",
  "const s=reviewExtractedNotes({sourceText:'  ',warnings:[]});",

@@ -1,0 +1,14 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const read=p=>fs.readFileSync(p,'utf8');
+const api=read('src/app/api/ai/source-pdf/route.ts');
+const ui=read('src/app/builder/page.tsx');
+assert(api.includes('Promise.allSettled(spans.map'),'PDF fallback must split pages');
+assert(api.includes('reviewExtractedNotes'),'PDF extraction must preserve warnings');
+assert(api.includes('describeGeminiError'),'Known Gemini failures must be shown');
+assert(api.includes("code:'PDF_PARSE_FAILED'"),'Distinguish corrupt PDF');
+assert(api.includes("code:'PDF_NO_CONTENT'"),'Distinguish blank scanned PDF');
+assert(api.includes('canCreateLesson:sourceText.length>=MIN_LESSON_CHARS'));
+assert(api.includes('MAX_UPLOAD_BYTES=4*1024*1024'));
+assert(ui.includes("pdfStatus")&&ui.includes("json.extractedLength"));
+assert(ui.includes("await r.text()"),'Vercel non-JSON responses must be diagnosed');
+console.log('PASS: Teacher PDF read, retry, feedback and safe partial text');

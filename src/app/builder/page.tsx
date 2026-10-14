@@ -18,6 +18,7 @@ export default function BuilderPage(){
  const [mode,setMode]=useState<'catalog'|'teacher'>('teacher');
  const [ownTitle,setOwnTitle]=useState(''),[ownSource,setOwnSource]=useState(''),[ownFilename,setOwnFilename]=useState('Nội dung giáo viên cung cấp');
  const [readingPdf,setReadingPdf]=useState(false),[sourceWarnings,setSourceWarnings]=useState<string[]>([]);
+ const [pdfStatus,setPdfStatus]=useState('');
  const [loading,setLoading]=useState(false),[catalogLoading,setCatalogLoading]=useState(true),[error,setError]=useState('');
  useEffect(()=>{const requested=new URLSearchParams(window.location.search).get('subject');if(isValidSubject(requested))setSubject(requested);},[]);
  const relevantBooks=useMemo(()=>books.filter(b=>b.subject===subject&&b.grade===grade&&b.is_active),[books,subject,grade]);
@@ -46,21 +47,25 @@ export default function BuilderPage(){
   }catch(e){setError(e instanceof Error?e.message:'Không thể tạo bài.');}finally{setLoading(false);}
  }
  async function uploadOwnFile(file:File|undefined){
-  if(!file)return;setError('');setSourceWarnings([]);
-  if(file.size>10*1024*1024){setError('Tệp tối đa 10 MB. Tách trang của đúng một bài học.');return;}
+  if(!file)return;setError('');setSourceWarnings([]);setPdfStatus('');
+  if(file.size>4*1024*1024&&/\.pdf$/i.test(file.name)){setError('Tệp PDF vượt 4 MB, quá lớn để gửi trực tiếp qua Vercel. Vui lòng chỉ lưu 1–4 trang của bài hoặc nén PDF.');return;}
+  if(file.size>10*1024*1024){setError('Tệp vượt 10 MB. Hãy rút gọn nội dung.');return;}
   setOwnFilename(file.name);
   if(/\.(txt|md)$/i.test(file.name)){
    const text=await file.text();if(text.length>25000){setError('Văn bản quá 25.000 ký tự. Chọn riêng một bài.');return;}
    setOwnSource(text);if(!ownTitle)setOwnTitle(file.name.replace(/\.[^.]+$/,''));return;
   }
   if(!/\.pdf$/i.test(file.name)){setError('Chỉ hỗ trợ PDF, TXT hoặc Markdown.');return;}
-  setReadingPdf(true);
+  setReadingPdf(true);setPdfStatus('Đang kiểm tra PDF và gửi Gemini đọc nội dung...');
   try{const form=new FormData();form.append('file',file);
    const r=await authorizedFetch('/api/ai/source-pdf',{method:'POST',body:form});
-   const json=await r.json();if(!r.ok)throw new Error(json.error||'Không đọc được PDF.');
-   setOwnSource(json.sourceText);setSourceWarnings(json.warnings||[]);
+   const raw=await r.text();let json:Record<string,unknown>;
+   try{json=JSON.parse(raw) as Record<string,unknown>;}catch{throw new Error('['+r.status+'] Máy chủ không nhận tệp PDF hoặc bị gián đoạn trước khi trả kết quả. Nếu PDF quá lớn, hãy tách 1–4 trang và thử lại.');}
+   if(!r.ok)throw new Error((json.code?'['+String(json.code)+'] ':'')+String(json.error||'Không đọc được PDF.'));
+   setOwnSource(String(json.sourceText||''));setSourceWarnings(Array.isArray(json.warnings)?json.warnings.map(String):[]);
+   setPdfStatus('Đã đọc '+String(json.extractedLength||'')+' ký tự từ '+String(json.pages||'')+' trang. '+(json.method==='split-pdf'?'Đã thử đọc bổ sung từng nhóm trang. ':'')+'Hãy đối chiếu SGK và chỉnh sửa trước khi tạo bài.');
    if(!ownTitle)setOwnTitle(file.name.replace(/\.[^.]+$/,''));
-  }catch(e){setError(e instanceof Error?e.message:'Không xử lý được PDF.');}
+  }catch(e){setError(e instanceof Error?e.message:'Không xử lý được PDF.');setPdfStatus('Đọc PDF thất bại, dữ liệu nguồn bạn đã nhập trước đó được giữ nguyên.');}
   finally{setReadingPdf(false);}
  }
  return <RequireLogin><AppShell subtitle="Chọn bài từ sách giáo khoa">
@@ -86,8 +91,9 @@ export default function BuilderPage(){
  <div className="warning-box"><Info size={18}/><span>{catalogLoading?'Đang tải danh mục...':'Chưa có bài được duyệt. Bạn có thể chuyển sang Tự đưa nội dung SGK ngay.'}</span></div>}
  </>:<div className="form-grid" style={{marginTop:12}}>
  <label className="field wide">Tên bài<input required maxLength={120} value={ownTitle} onChange={e=>setOwnTitle(e.target.value)} placeholder={subject==='Vật lí'?'Ví dụ: Cấu trúc của chất. Sự chuyển thể':'Nhập tên bài của môn '+subject}/></label>
- <label className="field wide">Tải nội dung bài (PDF 1–10 trang, TXT hoặc MD)<input type="file" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown" disabled={readingPdf} onChange={e=>{void uploadOwnFile(e.target.files?.[0]);}}/></label>
+ <label className="field wide">Tải nội dung bài (PDF 1–10 trang, tối đa 4 MB; TXT hoặc MD)<input type="file" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown" disabled={readingPdf} onChange={e=>{void uploadOwnFile(e.target.files?.[0]);}}/></label>
  {readingPdf&&<p role="status">Gemini đang đọc PDF, vui lòng chờ...</p>}
+ {pdfStatus&&<p role="status" className="muted">{pdfStatus}</p>}
  <label className="field wide">Nội dung nguồn — có thể chỉnh sửa trước khi tạo bài<textarea rows={12} maxLength={25000} value={ownSource} onChange={e=>setOwnSource(e.target.value)} placeholder="Dán nội dung SGK; kiểm tra, chỉnh sửa thuật ngữ, hình, công thức hoặc số liệu trước khi dùng AI."/></label>
  <p className="muted">{ownSource.length.toLocaleString('vi-VN')} / 25.000 ký tự. Nguồn chỉ thuộc tài khoản của bạn.</p>
  {sourceWarnings.length>0&&<div className="warning-box"><Info size={18}/><span>Cần hậu kiểm: {sourceWarnings.join(' | ')}</span></div>}

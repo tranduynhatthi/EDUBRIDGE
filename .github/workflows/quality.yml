@@ -19,6 +19,7 @@ jobs:
       - run: npm run test:mvp
       - run: npm run test:gemini
       - run: npm run test:extraction
+      - run: npm run test:teacher-pdf
       - run: npm run typecheck
       - name: Build Next.js
         env:

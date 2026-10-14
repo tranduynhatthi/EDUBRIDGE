@@ -1,3 +1,15 @@
+# EDUBRIDGE 1.6 – Bản hiện hành (Gemini + nguồn giáo viên + tra cứu/luyện nói)
+
+**Các chức năng mới:** Giáo viên được tự đưa nội dung bài SGK vào (dán văn bản, tải TXT/MD, PDF 1–10 trang) hoặc chọn bài trong kho đã duyệt; từ điển và luyện nói tra từ/câu bất kỳ bằng Gemini, không phụ thuộc bài đã lưu. Đăng ký có trang `/auth/confirm`. Kho 25 bài SGK Vật lí 12 vẫn dùng cơ chế hậu kiểm trước khi công bố.
+
+**Cấu hình email bắt buộc:** Supabase → Authentication → URL Configuration, thay Site URL `localhost` thành tên miền Production chính thức của Vercel và thêm Redirect URLs `/auth/confirm`. Nếu không sửa trong Dashboard, email xác nhận vẫn có thể chuyển về `localhost`, dù mã website đã cập nhật. Xem [hướng dẫn xử lý email và công cụ mới](docs/07_AUTH_SGK_TRA_CUU.md).
+
+**Kiểm thử:** GitHub Actions kiểm tra tự động cú pháp, contract, TypeScript và Next.js build. Chưa khẳng định đã nghiệm thu đăng ký-email Gemini toàn chu trình bằng người dùng thật; cần cấu hình Supabase và Gemini chính xác.
+
+---
+
+## Hướng dẫn lưu trữ gốc (MVP 1.2–1.5, một số giới hạn đã được thay ở 1.6)
+
 # EDUBRIDGE MVP 1.5 (Gemini API) – SGK Vật lí 12 (Kết nối tri thức)
 
 **Mục tiêu:** Quản trị viên tải đúng tệp `SGK Vật lí 12-mau.pdf` (126 trang) lên hệ thống một lần, nhấn nút tạo **25 mục bài học**, sau đó AI giúp chuẩn bị bản nháp nội dung từ **trang PDF dạng ảnh**, quản trị viên hậu kiểm từng bài. Giáo viên đăng nhập chỉ việc **chọn lớp 12 → chọn bộ sách → chọn bài đã duyệt → Tạo bài dạy bằng AI**.

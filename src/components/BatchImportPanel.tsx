@@ -5,7 +5,7 @@ import {supabaseBrowser} from '@/lib/supabase';
 
 type Batch={id:string;status:'paused'|'running'|'completed'|'completed_with_errors'|'cancelled';approved_at:string|null;created_at:string;finished_at:string|null};
 type Job={id:string;textbook_lesson_id:string;sort_order:number;status:'queued'|'processing'|'review_required'|'published'|'failed'|'skipped';attempts:number;error_code:string|null;extracted_chars:number;partial_text:string};
-type Props={bookId:string;onRefreshCatalog:()=>Promise<void>;onSelectLesson:(id:string)=>void};
+type Props={bookId:string;onRefreshCatalog:()=>Promise<void>;onSelectLesson:(id:string,partial:string)=>void};
 const statusVi:Record<Batch['status']|Job['status'],string>={
  paused:'Tạm dừng, chưa gọi AI',running:'Đang xử lý nền',completed:'Xử lý xong – chờ hậu kiểm',
  completed_with_errors:'Hoàn thành, có bài lỗi',cancelled:'Đã hủy',queued:'Chờ xử lý',processing:'Đang trích xuất',
@@ -81,7 +81,7 @@ export default function BatchImportPanel({bookId,onRefreshCatalog,onSelectLesson
     <table style={{width:'100%',fontSize:13,borderCollapse:'collapse'}}><thead><tr style={{background:'#fff7ed'}}>
      <th style={{padding:10,textAlign:'left'}}>Bài</th><th style={{padding:10,textAlign:'left'}}>Trạng thái</th><th style={{padding:10}}>Lượt thử</th><th style={{padding:10}}>Ký tự</th></tr></thead>
      <tbody>{jobs.map(job=><tr key={job.id} style={{borderTop:'1px solid #ffedd5'}}>
-      <td style={{padding:9}}><button type="button" onClick={()=>{onSelectLesson(job.textbook_lesson_id);window.setTimeout(()=>document.getElementById('review-lesson')?.scrollIntoView({behavior:'smooth'}),100);}}>{job.sort_order}. Xem/hậu kiểm</button></td>
+      <td style={{padding:9}}><button type="button" onClick={()=>{onSelectLesson(job.textbook_lesson_id,job.partial_text);window.setTimeout(()=>document.getElementById('review-lesson')?.scrollIntoView({behavior:'smooth'}),100);}}>{job.sort_order}. Xem/hậu kiểm</button></td>
       <td style={{padding:9}}>{statusVi[job.status]}{job.error_code&&<small style={{display:'block',color:'#b91c1c'}}>{job.error_code}</small>}</td>
       <td style={{padding:9,textAlign:'center'}}>{job.attempts}/3</td>
       <td style={{padding:9,textAlign:'center'}}>{job.extracted_chars}</td></tr>)}</tbody></table>

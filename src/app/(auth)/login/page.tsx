@@ -17,10 +17,10 @@ export default function LoginPage() {
   try {
    const api=supabaseBrowser();
    if(register){
-    const {data,error}=await api.auth.signUp({email,password,options:{data:{full_name:name,role:accountType},emailRedirectTo:window.location.origin+(accountType==='student'?'/student':'/builder')}});
+    const {data,error}=await api.auth.signUp({email,password,options:{data:{full_name:name,role:accountType},emailRedirectTo:window.location.origin+'/auth/confirm'}});
     if(error)throw error;
     if(data.session){router.replace(accountType==='student'?'/student':'/builder');return;}
-    setMessage('Tài khoản đã được gửi yêu cầu xác nhận. Hãy mở email xác nhận, sau đó đăng nhập.');
+    setMessage('Kiểm tra email và bấm xác nhận. Sau khi xác nhận, trở về trang Đăng nhập. Nếu email mở localhost, Site URL trong Supabase cần được sửa thành tên miền Vercel chính thức.');
    } else {
     const {error}=await api.auth.signInWithPassword({email,password});if(error)throw error;
     const {data:{user}}=await api.auth.getUser();const {data:profile}=await api.from('profiles').select('role').eq('id',user?.id||'').single();router.replace(profile?.role==='student'?'/student':'/builder');
@@ -36,6 +36,6 @@ export default function LoginPage() {
  {message&&<p className="notice">{message}</p>}
  <button disabled={loading} className="primary-btn full" type="submit">{loading?'Đang xử lí…':register?'Tạo tài khoản':'Đăng nhập'} <ArrowRight size={18}/></button></form>
  <p className="auth-toggle">{register?'Đã có tài khoản?':'Chưa có tài khoản?'} <button onClick={()=>{setRegister(!register);setMessage('');}}>{register?'Đăng nhập':'Đăng ký giáo viên'}</button></p>
- <p className="auth-note">Tài khoản học sinh chỉ được tham gia lớp bằng mã do giáo viên cung cấp.</p>
+ <p className="auth-note">Tài khoản học sinh chỉ được tham gia lớp bằng mã do giáo viên cung cấp. Nếu xác nhận email chuyển về localhost, hãy yêu cầu quản trị viên cập nhật Supabase Authentication → URL Configuration (Site URL và Redirect URLs).</p>
  </div></div>;
 }

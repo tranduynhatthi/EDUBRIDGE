@@ -1,5 +1,5 @@
 import {generateGeminiJson,lessonJsonSchema} from '@/lib/gemini';
-import { CatalogRequestSchema, LessonResultSchema } from '@/lib/schema';
+import { CatalogRequestSchema, TeacherSourceRequestSchema, LessonResultSchema } from '@/lib/schema';
 import { requireTeacher, authFailure } from '@/lib/server-auth';
 
 export const runtime = 'nodejs';
@@ -10,26 +10,36 @@ export async function POST(request: Request) {
   try { auth = await requireTeacher(request); } catch (error) { return authFailure(error); }
 
   const raw = await request.text();
-  if (raw.length > 40000) return Response.json({error: 'Yêu cầu quá dài.'}, {status: 413});
+  if (raw.length > 85000) return Response.json({error: 'Yêu cầu quá dài.'}, {status: 413});
   let body: unknown;
   try { body = JSON.parse(raw); } catch { return Response.json({error: 'Dữ liệu gửi lên không phải JSON.'}, {status: 400}); }
-  const validated = CatalogRequestSchema.safeParse(body);
-  if (!validated.success) return Response.json({error: validated.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ.'}, {status: 400});
-  if (!process.env.GEMINI_API_KEY) return Response.json({error: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ.'}, {status: 503});
+  const custom = TeacherSourceRequestSchema.safeParse(body);
+  const catalog = custom.success ? null : CatalogRequestSchema.safeParse(body);
+  if(!custom.success && (!catalog || !catalog.success))
+    return Response.json({error:'Chọn bài trong kho hoặc cung cấp văn bản SGK hợp lệ (250–25.000 ký tự).'}, {status:400});
+  if (!process.env.GEMINI_API_KEY)
+    return Response.json({error:'Chưa cấu hình GEMINI_API_KEY trên máy chủ.'},{status:503});
 
-  const incoming = validated.data;
-  // Server-side source of truth: only an approved textbook lesson can be used.
-  const {data:lesson,error:lessonError}=await auth.supabase.from('textbook_lessons')
-    .select('id,title,source_text,start_page,end_page,is_published,textbooks!inner(title,subject,grade,book_series,is_active)')
-    .eq('id',incoming.textbookLessonId).eq('is_published',true).single();
-  if(lessonError||!lesson)return Response.json({error:'Bài học chưa được duyệt hoặc không tồn tại trong kho SGK.'},{status:404});
-  const book=lesson.textbooks as unknown as {title:string;subject:string;grade:string;book_series:string;is_active:boolean};
-  if(!book.is_active)return Response.json({error:'Bộ sách này đã bị ngừng sử dụng.'},{status:400});
-  if(book.subject!=='Vật lí'||!['10','11','12'].includes(book.grade))return Response.json({error:'Thông tin SGK không hợp lệ.'},{status:400});
-  const data={title:lesson.title,subject:'Vật lí' as const,grade:book.grade,
-    languageLevel:incoming.languageLevel,sourceText:lesson.source_text,
-    sourceFilename:`${book.title} – ${book.book_series}, PDF trang ${lesson.start_page}-${lesson.end_page}`,
-    teacherNotes:incoming.teacherNotes,textbookLessonId:lesson.id};
+  let data:{title:string;subject:'Vật lí';grade:string;languageLevel:'A2'|'B1'|'B2';sourceText:string;sourceFilename:string;teacherNotes:string;textbookLessonId:string|null};
+  if(custom.success){
+    data={title:custom.data.title,subject:'Vật lí',grade:custom.data.grade,languageLevel:custom.data.languageLevel,
+      sourceText:custom.data.sourceText,sourceFilename:custom.data.sourceFilename,
+      teacherNotes:custom.data.teacherNotes,textbookLessonId:null};
+  }else{
+    const incoming = (catalog as {success:true;data:{textbookLessonId:string;languageLevel:'A2'|'B1'|'B2';teacherNotes:string}}).data;
+    // Only approved catalog lessons may be used on the catalog path.
+    const {data:lesson,error:lessonError}=await auth.supabase.from('textbook_lessons')
+      .select('id,title,source_text,start_page,end_page,is_published,textbooks!inner(title,subject,grade,book_series,is_active)')
+      .eq('id',incoming.textbookLessonId).eq('is_published',true).single();
+    if(lessonError||!lesson)return Response.json({error:'Bài học chưa được duyệt hoặc không tồn tại trong kho SGK.'},{status:404});
+    const book=lesson.textbooks as unknown as {title:string;subject:string;grade:string;book_series:string;is_active:boolean};
+    if(!book.is_active || book.subject!=='Vật lí' || !['10','11','12'].includes(book.grade))
+      return Response.json({error:'Thông tin SGK không hợp lệ.'},{status:400});
+    data={title:lesson.title,subject:'Vật lí',grade:book.grade,languageLevel:incoming.languageLevel,
+      sourceText:lesson.source_text,
+      sourceFilename:`${book.title} – ${book.book_series}, PDF trang ${lesson.start_page}-${lesson.end_page}`,
+      teacherNotes:incoming.teacherNotes,textbookLessonId:lesson.id};
+  }
   const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
   try {
     const generated=await generateGeminiJson({

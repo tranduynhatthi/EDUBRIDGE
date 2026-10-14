@@ -36,3 +36,10 @@
 - Gemini API có giới hạn số lần gọi/tokens và giá theo dự án Google; không nhầm gói ChatGPT với Google AI API.
 - Hạn mức Hosting Vercel theo gói; việc cắt PDF và đọc ảnh có thể tốn thời gian, tùy giới hạn function của gói.
 - JSON hợp lệ không đảm bảo đúng kiến thức Vật lí; mọi công thức, thuật ngữ, đơn vị, đáp án đều cần giáo viên hậu kiểm.
+
+## V1.6: Email + giáo viên tự nhập nội dung + từ điển/luyện nói linh hoạt
+- Đăng ký: emailRedirectTo sử dụng /auth/confirm, trang auth/confirm tiếp nhận mã xác nhận và cung cấp đường quay lại /login.
+- BẮT BUỘC vào Supabase Authentication → URL Configuration, thay Site URL localhost thành tên miền Production chính thức của Vercel, trong Redirect URLs thêm /auth/confirm và /login (có thể dùng wildcard preview riêng). Chỉ sửa mã nguồn không tự sửa cấu hình máy chủ Auth.
+- Giáo viên chọn chế độ Tự đưa nội dung SGK: dán text (250–25.000 ký tự), tải TXT/MD hoặc PDF 1–10 trang (<=10MB); Gemini xử lý thành ghi chú để giáo viên hậu kiểm. Không tự xuất bản vào thư viện chung.
+- Từ điển và luyện nói nhận từ/câu bất kỳ, trả kết quả qua Gemini sau khi ngừng gõ. Các yêu cầu dùng quota Gemini API. Luyện nói chỉ so khớp văn bản nhận diện, không chấm chất lượng phát âm.
+- SQL 06 cải thiện profile trigger: tài khoản student nhận role student, admin chỉ cấp bằng SQL thủ công.

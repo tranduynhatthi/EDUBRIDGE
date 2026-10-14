@@ -155,7 +155,7 @@ export default function LibraryAdmin(){
  <p className="muted">Sách đang chọn: <b>{selected?.title}</b> – đã có {catalogOfBook.length}/25 mục bài. Để đọc sách ảnh quét, chọn bài vừa tạo bên dưới và bấm “AI đọc PDF bài này”, sau đó đối chiếu và duyệt.</p>
  <button type="button" className="primary-btn" onClick={seedPhysics12} disabled={busy||!selectedBook}><BookMarked size={17}/> Nhập danh mục 25 bài từ SGK đã tải</button>
  </section>}
- {selectedBook&&<BatchImportPanel bookId={selectedBook} onRefreshCatalog={refresh} onSelectLesson={id=>{const lesson=catalog.find(x=>x.id===id);if(lesson)selectEditor(lesson);}}/>}
+ {selectedBook&&<BatchImportPanel bookId={selectedBook} onRefreshCatalog={refresh} onSelectLesson={(id,partial)=>{const lesson=catalog.find(x=>x.id===id);if(lesson)selectEditor({...lesson,source_text:lesson.source_text||partial,extraction_note:lesson.extraction_note||'Nguồn trích xuất một phần do Gemini trả về. Chưa hậu kiểm; cần bổ sung và đối chiếu SGK.'});}}/>}
  <section className="white-panel" style={{marginTop:22}}><div className="section-heading"><div><h2>Danh mục bài đã nhập</h2><p>Chọn một bài để kiểm tra hoặc chỉnh sửa nội dung trước khi duyệt.</p></div></div>
  {catalog.length===0?<p className="muted">Chưa có bài. Hãy nhập SGK và khai báo trang của bài đầu tiên.</p>:<div className="catalog-items">{catalog.map(l=><button key={l.id} type="button" onClick={()=>selectEditor(l)} className={'catalog-row'+(editId===l.id?' active':'')}><span><strong>{l.sort_order}. {l.title}</strong><small>{books.find(b=>b.id===l.textbook_id)?.title} · PDF trang {l.start_page}–{l.end_page}</small></span><span className={l.is_published?'published-label':'draft-label'}>{l.is_published?'Đã duyệt':'Bản nháp'}</span></button>)}</div>}
  </section>

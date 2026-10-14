@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import RequireLogin from '@/components/RequireLogin';
 import {authorizedFetch,supabaseBrowser} from '@/lib/supabase';
 import {SUBJECT_GROUPS,isValidSubject,type SubjectName} from '@/lib/subjects';
+import BatchImportPanel from '@/components/BatchImportPanel';
 
 type Book={id:string,title:string,subject:string,grade:string,book_series:string,publisher:string,page_count:number,is_active:boolean};
 type CatalogLesson={id:string,textbook_id:string,sort_order:number,chapter:string,title:string,start_page:number,end_page:number,source_text:string,extraction_note:string,is_published:boolean};
@@ -154,10 +155,11 @@ export default function LibraryAdmin(){
  <p className="muted">Sách đang chọn: <b>{selected?.title}</b> – đã có {catalogOfBook.length}/25 mục bài. Để đọc sách ảnh quét, chọn bài vừa tạo bên dưới và bấm “AI đọc PDF bài này”, sau đó đối chiếu và duyệt.</p>
  <button type="button" className="primary-btn" onClick={seedPhysics12} disabled={busy||!selectedBook}><BookMarked size={17}/> Nhập danh mục 25 bài từ SGK đã tải</button>
  </section>}
+ {selectedBook&&<BatchImportPanel bookId={selectedBook} onRefreshCatalog={refresh} onSelectLesson={id=>{const lesson=catalog.find(x=>x.id===id);if(lesson)selectEditor(lesson);}}/>}
  <section className="white-panel" style={{marginTop:22}}><div className="section-heading"><div><h2>Danh mục bài đã nhập</h2><p>Chọn một bài để kiểm tra hoặc chỉnh sửa nội dung trước khi duyệt.</p></div></div>
  {catalog.length===0?<p className="muted">Chưa có bài. Hãy nhập SGK và khai báo trang của bài đầu tiên.</p>:<div className="catalog-items">{catalog.map(l=><button key={l.id} type="button" onClick={()=>selectEditor(l)} className={'catalog-row'+(editId===l.id?' active':'')}><span><strong>{l.sort_order}. {l.title}</strong><small>{books.find(b=>b.id===l.textbook_id)?.title} · PDF trang {l.start_page}–{l.end_page}</small></span><span className={l.is_published?'published-label':'draft-label'}>{l.is_published?'Đã duyệt':'Bản nháp'}</span></button>)}</div>}
  </section>
- {selectedRecord&&<section className="white-panel form-section" style={{marginTop:20}}><h2><span className="step-dot">3</span> Hậu kiểm và duyệt: {selectedRecord.title}</h2>
+ {selectedRecord&&<section id="review-lesson" className="white-panel form-section" style={{marginTop:20}}><h2><span className="step-dot">3</span> Hậu kiểm và duyệt: {selectedRecord.title}</h2>
  <div className="attention"><Info size={19}/><div>Đọc đối chiếu với bản PDF gốc. Phần trích chữ có thể thiếu hình vẽ, chỉ số trên/dưới, dấu âm, căn thức hoặc ký hiệu. Không công bố nếu chưa xử lí lỗi kiến thức.</div></div>
  {!selectedRecord.is_published&&!selectedRecord.source_text.trim()&&<div style={{marginBottom:18}}>
  <p className="muted">Bài này mới có tên và phạm vi trang. Tệp SGK là PDF ảnh quét, nên không thể trích chữ bằng cách thông thường. Bấm nút dưới để AI đọc các trang của đúng bài; kết quả chỉ là bản nháp, cần giáo viên duyệt.</p>

@@ -1,0 +1,16 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');const read=p=>fs.readFileSync(p,'utf8');
+const sql=read('supabase/08_bulk_import_queue.sql'),edge=read('supabase/functions/edubridge-bulk-worker/index.ts');
+const ui=read('src/components/BatchImportPanel.tsx'),admin=read('src/app/admin/library/page.tsx');
+assert(sql.includes("status text not null default 'paused'"));
+assert(sql.includes('EXPLICIT_COST_APPROVAL_REQUIRED'));
+assert(sql.includes("where status='running'"));
+assert(sql.toLowerCase().includes('for update skip locked'));
+assert(sql.includes('lease_token'));
+assert(edge.includes('edubridge_check_worker_token'));
+assert(edge.includes('GEMINI_API_KEY'));
+assert(edge.includes('EdgeRuntime.waitUntil'));
+assert(ui.includes('window.confirm'));
+assert(ui.includes('p_approve_cost:charge'));
+assert(admin.includes('BatchImportPanel'));
+assert(sql.includes("not is_published"));
+console.log('PASS: 12 bulk processing safety contracts. No AI calls.');

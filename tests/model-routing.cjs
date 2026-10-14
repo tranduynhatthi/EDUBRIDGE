@@ -12,6 +12,9 @@ const cmd=[
  "if(m.selectGeminiModel('standard')!=='gemini-3.5-flash-lite')throw Error('Legacy Vercel env overrides standard');",
  "if(m.selectGeminiModel('advanced')!=='gemini-3.8-flash')throw Error('Advanced model wrong');",
  "if(m.selectGeminiModel('vision')!=='gemini-3.8-flash')throw Error('PDF model wrong');",
+ "process.env.GEMINI_VISION_MODEL='gemini-3.1-flash-lite';",
+ "if(m.selectGeminiModel('advanced')!=='gemini-3.8-flash')throw Error('Advanced should always be 3.8');",
+ "if(m.selectGeminiModel('vision')!=='gemini-3.1-flash-lite')throw Error('Vision should respect its env');",
  "console.log('PASS standard, advanced and vision model routing');"
 ].join('');
 const p=spawnSync(process.execPath,['--experimental-strip-types','--input-type=module','-e',cmd,path.join(process.cwd(),'src/lib/gemini-models.ts')],{encoding:'utf8'});

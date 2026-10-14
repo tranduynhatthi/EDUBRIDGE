@@ -7,5 +7,6 @@ export const GEMINI_STANDARD_MODEL='gemini-3.5-flash-lite';
 export const GEMINI_ADVANCED_MODEL='gemini-3.8-flash';
 export function selectGeminiModel(task:GeminiTask):string{
  if(task==='standard')return GEMINI_STANDARD_MODEL;
+ if(task==='advanced')return GEMINI_ADVANCED_MODEL;
  return process.env.GEMINI_VISION_MODEL?.trim()||GEMINI_ADVANCED_MODEL;
 }

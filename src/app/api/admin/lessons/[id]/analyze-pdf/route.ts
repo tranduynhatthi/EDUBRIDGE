@@ -30,6 +30,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  try{
   const original=await PDFDocument.load(await file.arrayBuffer());
   if(original.getPageCount()!==book.page_count)return Response.json({error:'Số trang PDF đã thay đổi. Vui lòng kiểm tra lại SGK gốc.'},{status:422});
+  const lessonTitle=lesson.title;
   const model=process.env.GEMINI_VISION_MODEL||process.env.GEMINI_MODEL||'gemini-3.8-flash';
   const instructions=[
    'Đọc PDF ảnh quét và tạo BẢN NHÁP ghi chú nội dung cho giáo viên đối chiếu.',
@@ -51,7 +52,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
    const result=await generateGeminiJson({
     model,instructions,
     parts:[
-     {text:'SÁCH '+book.title+'; BÀI '+lesson.title+'; TRANG PDF '+start+'–'+end+'. Đọc tất cả trang PDF, trả sourceText gồm ghi chú nội dung và warnings gồm lỗi chưa chắc chắn. Chỉ nêu nội dung thấy trong ảnh.'},
+     {text:'SÁCH '+book.title+'; BÀI '+lessonTitle+'; TRANG PDF '+start+'–'+end+'. Đọc tất cả trang PDF, trả sourceText gồm ghi chú nội dung và warnings gồm lỗi chưa chắc chắn. Chỉ nêu nội dung thấy trong ảnh.'},
      {inlineData:{mimeType:'application/pdf',data:Buffer.from(bytes).toString('base64')}}
     ],
     schema:notesJsonSchema,maxOutputTokens:7500,timeoutMs

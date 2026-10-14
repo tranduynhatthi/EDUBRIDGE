@@ -1,5 +1,5 @@
 import {generateGeminiJson,lessonJsonSchema,describeGeminiError} from '@/lib/gemini';
-import { CatalogRequestSchema, TeacherSourceRequestSchema, LessonResultSchema } from '@/lib/schema';
+import { CatalogRequestSchema, TeacherSourceRequestSchema, ReadyLessonRequestSchema, LessonResultSchema } from '@/lib/schema';
 import { requireTeacher, authFailure } from '@/lib/server-auth';
 import {isValidSubject} from '@/lib/subjects';
 import {selectGeminiModel} from '@/lib/gemini-models';
@@ -16,9 +16,10 @@ export async function POST(request: Request) {
   let body: unknown;
   try { body = JSON.parse(raw); } catch { return Response.json({error: 'Dữ liệu gửi lên không phải JSON.'}, {status: 400}); }
   const custom = TeacherSourceRequestSchema.safeParse(body);
-  const catalog = custom.success ? null : CatalogRequestSchema.safeParse(body);
-  if(!custom.success && (!catalog || !catalog.success))
-    return Response.json({error:'Chọn bài trong kho hoặc cung cấp văn bản SGK hợp lệ (250–25.000 ký tự).'}, {status:400});
+  const ready = custom.success ? null : ReadyLessonRequestSchema.safeParse(body);
+  const catalog = custom.success || ready?.success ? null : CatalogRequestSchema.safeParse(body);
+  if(!custom.success && !ready?.success && !catalog?.success)
+    return Response.json({error:'Chưa chọn bài học hợp lệ từ cơ sở dữ liệu.',code:'LIBRARY_LESSON_REQUIRED'},{status:400});
   if (!process.env.GEMINI_API_KEY)
     return Response.json({error:'Chưa cấu hình GEMINI_API_KEY trên máy chủ.',code:'MISSING_GEMINI_KEY'},{status:503});
 
@@ -29,6 +30,21 @@ export async function POST(request: Request) {
     data={title:custom.data.title,subject:custom.data.subject,grade:custom.data.grade,languageLevel:custom.data.languageLevel,
       sourceText:custom.data.sourceText,sourceFilename:custom.data.sourceFilename,
       teacherNotes:custom.data.teacherNotes,textbookLessonId:null};
+  }else if(ready?.success){
+    const incoming=ready.data;
+    generationMode=incoming.generationMode;
+    const {data:lesson,error:lessonError}=await auth.supabase.from('edubridge_ready_lessons')
+      .select('id,title,subject,grade,slug,source_text,is_active')
+      .eq('id',incoming.readyLessonId).eq('is_active',true).single();
+    if(lessonError||!lesson)return Response.json({error:'Bài học chưa có trong cơ sở dữ liệu hoặc không còn được phát hành.',code:'READY_LESSON_NOT_FOUND'},{status:404});
+    if(!isValidSubject(lesson.subject)||!['10','11','12'].includes(lesson.grade))
+      return Response.json({error:'Môn học/lớp không được EDUBRIDGE hỗ trợ.',code:'READY_LESSON_SUBJECT_INVALID'},{status:400});
+    if(typeof lesson.source_text!=='string'||lesson.source_text.trim().length<250||lesson.source_text.length>25000)
+      return Response.json({error:'Nội dung bài trong cơ sở dữ liệu chưa đủ điều kiện tạo bài dạy.',code:'READY_LESSON_CONTENT_INVALID'},{status:422});
+    data={title:lesson.title,subject:lesson.subject,grade:lesson.grade,
+      languageLevel:incoming.languageLevel,sourceText:lesson.source_text,
+      sourceFilename:'Học liệu EDUBRIDGE biên soạn độc lập – '+lesson.slug,
+      teacherNotes:incoming.teacherNotes,textbookLessonId:null};
   }else{
     const incoming = (catalog as {success:true;data:{textbookLessonId:string;languageLevel:'A2'|'B1'|'B2';teacherNotes:string;generationMode:'standard'|'advanced'}}).data;
     generationMode=incoming.generationMode;

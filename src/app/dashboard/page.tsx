@@ -25,12 +25,12 @@ export default function Dashboard(){
  return <RequireLogin><AppShell subtitle="Tổng quan">
  <section className="welcome"><div><div className="eyebrow">EDUBRIDGE / KHÔNG GIAN GIÁO VIÊN</div>
  <h1>Xin chào, {displayName}! <span aria-hidden="true">👋</span></h1>
- <p>Chọn môn học bạn đang giảng dạy. EDUBRIDGE sẽ giúp tạo học liệu EMI/CLIL, slide, câu giao tiếp và bài tập từ nguồn bạn cung cấp.</p>
+ <p>Chọn môn học bạn đang giảng dạy. EDUBRIDGE giúp soạn bài EMI/CLIL, slide, câu giao tiếp và bài tập từ học liệu đã có sẵn trong cơ sở dữ liệu.</p>
  <a className="primary-btn" href="#chon-mon">Chọn môn học <ArrowRight size={17}/></a></div><div className="hero-icon"><Sparkles size={56}/></div></section>
  <div className="stats"><div className="stat"><Layers3 size={24}/><div><b>{items.length}</b><small>Bài học đã tạo</small></div></div>
  <div className="stat"><BookOpen size={24}/><div><b>{SUBJECT_GROUPS.reduce((n,g)=>n+g.items.length,0)} môn</b><small>Môn hiện hỗ trợ</small></div></div>
  <div className="stat"><Clock3 size={24}/><div><b>EMI / CLIL</b><small>Dạy học song ngữ với Gemini</small></div></div></div>
- <section id="chon-mon" className="white-panel subject-panel"><div className="section-heading"><div><h2>Chọn môn học</h2><p>Nhấn vào một môn để mở trang Chọn bài từ sách giáo khoa; không cần chọn bộ sách.</p></div></div>
+ <section id="chon-mon" className="white-panel subject-panel"><div className="section-heading"><div><h2>Chọn môn học</h2><p>Nhấn vào môn để chọn bài học có sẵn trong cơ sở dữ liệu; không cần tải sách hay nhập nội dung.</p></div></div>
  {SUBJECT_GROUPS.map(group=><div className="subject-group" key={group.id}><h3>{group.label}</h3><div className="subject-grid">
  {group.items.map(subject=><Link key={subject} href={`/builder?subject=${encodeURIComponent(subject)}`} className="subject-card">
  <span className="subject-icon"><BookOpen size={20}/></span><strong>{subject}</strong><ArrowRight size={17} className="subject-arrow"/></Link>)}
@@ -40,7 +40,7 @@ export default function Dashboard(){
  <section className="white-panel" style={{marginTop:22}}><div className="section-heading"><div><h2>Bài học của tôi</h2><p>Nội dung đã tạo và lưu trong tài khoản.</p></div>
  <Link href="/builder" className="secondary-btn"><FilePlus2 size={16}/> Tạo bài mới</Link></div>
  {loading?<p>Đang tải...</p>:error?<p className="error">{error}</p>:items.length===0?
- <div className="empty-state"><BookOpen size={36}/><h3>Chưa có bài học nào</h3><p>Hãy chọn một môn học phía trên hoặc tự đưa nội dung bài SGK vào.</p></div>:
+ <div className="empty-state"><BookOpen size={36}/><h3>Chưa có bài học nào</h3><p>Hãy chọn môn học và bài học có sẵn ở phía trên.</p></div>:
  <div className="lessons-list">{items.map(item=><Link key={item.id} className="lesson-item" href={`/lessons/${item.id}`}>
  <span className="lesson-avatar"><BookOpen size={20}/></span><div className="lesson-meta"><strong>{item.title}</strong>
  <span>{item.subject} · Lớp {item.grade} · English {item.language_level} · {new Date(item.created_at).toLocaleDateString('vi-VN')}</span></div><ArrowRight size={17}/></Link>)}</div>}

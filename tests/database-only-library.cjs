@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const read=p=>fs.readFileSync(p,'utf8');
+const shell=read('src/components/AppShell.tsx'),ui=read('src/app/builder/page.tsx');
+const api=read('src/app/api/ai/lesson/route.ts'),schema=read('src/lib/schema.ts');
+for(const name of ['Kết quả học sinh','Quản trị SGK'])assert(!shell.includes(name),'Old sidebar link remains: '+name);
+for(const name of ['Học liệu có sẵn</button>','SGK đã hậu kiểm</button>','Tự đưa nội dung SGK','type="file"'])assert(!ui.includes(name),'Old chooser item remains: '+name);
+assert(ui.includes('readyLessonId:selected.id'),'Frontend sends ready ID');
+assert(ui.includes('textbookLessonId:selected.id'),'Frontend supports approved SGK');
+assert(!ui.includes('sourceText:readyText'),'Frontend must not submit arbitrary ready-source content');
+assert(api.includes('ReadyLessonRequestSchema.safeParse(body)'),'Server checks ID request');
+assert(api.includes("from('edubridge_ready_lessons')"),'Server must look up ready content');
+assert(api.includes(".eq('is_active',true)"),'Server checks active library item');
+assert(schema.includes('readyLessonId:z.string().uuid()'),'Server validates UUID');
+assert(ui.includes('Chưa có bài học cho môn/lớp này'),'Incomplete catalog must be explicit');
+console.log('PASS: single database-backed lesson selector, clean nav, server validation, no upload required.');

@@ -16,7 +16,7 @@ assert(read('src/app/(auth)/login/page.tsx').includes("emailRedirectTo:window.lo
 assert(read('src/app/auth/confirm/page.tsx').includes('exchangeCodeForSession'));
 assert(read('src/app/api/ai/language/route.ts').includes('requireTeacher(request)'));
 assert(read('src/app/api/ai/source-pdf/route.ts').includes('requireTeacher(request)'));
-console.log('PASS: role, email callback, language tools and teacher upload static checks. Live services need E2E.');
+console.log('PASS: role, email callback, language services and teacher auth. Live services need E2E.');
 
 const dashboard=read('src/app/dashboard/page.tsx');
 const subjects=read('src/lib/subjects.ts');

@@ -7,6 +7,12 @@ export const CatalogRequestSchema = z.object({
   teacherNotes: z.string().max(1500),
   generationMode:z.enum(['standard','advanced']).optional().default('standard'),
 });
+export const ReadyLessonRequestSchema=z.object({
+ readyLessonId:z.string().uuid(),
+ languageLevel:z.enum(['A2','B1','B2']),
+ teacherNotes:z.string().max(1500),
+ generationMode:z.enum(['standard','advanced']).optional().default('standard'),
+});
 export type LessonRequest = z.infer<typeof CatalogRequestSchema>;
 export const TeacherSourceRequestSchema=z.object({
  mode:z.literal('teacher'),

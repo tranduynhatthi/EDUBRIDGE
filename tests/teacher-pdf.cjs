@@ -10,5 +10,5 @@ assert(api.includes("code:'PDF_NO_CONTENT'"),'Distinguish blank scanned PDF');
 assert(api.includes('canCreateLesson:sourceText.length>=MIN_LESSON_CHARS'));
 assert(api.includes('MAX_UPLOAD_BYTES=4*1024*1024'));
 assert(ui.includes("pdfStatus")&&ui.includes("json.extractedLength"));
-assert(ui.includes("await r.text()"),'Vercel non-JSON responses must be diagnosed');
-console.log('PASS: Teacher PDF read, retry, feedback and safe partial text');
+assert(ui.includes("await response.text()"),'Vercel non-JSON responses must be diagnosed');
+console.log('PASS: PDF extraction backend remains available to authorized workflows; teacher UI is database-only.');

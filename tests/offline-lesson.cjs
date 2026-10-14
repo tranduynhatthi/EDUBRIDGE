@@ -1,7 +1,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const builder=read('src/app/builder/page.tsx'),details=read('src/app/lessons/[id]/page.tsx'),source=read('src/lib/offline-lesson.ts');
-assert(builder.includes('makeOfflineLesson(title,source)'),'Offline template must be accessible');
+assert(builder.includes('makeOfflineLesson(selected.title,source)'),'Offline template must be accessible');
 assert(builder.includes("model_name:'offline-template'"),'Offline template must be labelled, not AI');
 assert(builder.includes("status:'draft'"),'Offline template must never auto-publish');
 assert(builder.includes('Tạo bản khung KHÔNG dùng AI'),'Dedicated opt-in button');

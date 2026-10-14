@@ -1,6 +1,6 @@
 {
   "name": "edubridge-mvp-vatli12-select-lesson",
-  "version": "1.11.1",
+  "version": "1.12.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -20,7 +20,8 @@
     "test:offline": "node tests/offline-lesson.cjs",
     "test:models": "node tests/model-routing.cjs",
     "test:slides": "node tests/slide-studio.cjs",
-    "test:subjects": "node tests/subject-visibility.cjs"
+    "test:subjects": "node tests/subject-visibility.cjs",
+    "test:library-only": "node tests/database-only-library.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

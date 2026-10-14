@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {isValidSubject} from '@/lib/subjects';
 
 export const CatalogRequestSchema = z.object({
   textbookLessonId: z.string().uuid(),
@@ -9,6 +10,7 @@ export type LessonRequest = z.infer<typeof CatalogRequestSchema>;
 export const TeacherSourceRequestSchema=z.object({
  mode:z.literal('teacher'),
  title:z.string().trim().min(5).max(120),
+ subject:z.string().refine(isValidSubject,'Môn học không hợp lệ'),
  grade:z.enum(['10','11','12']),
  languageLevel:z.enum(['A2','B1','B2']),
  sourceText:z.string().trim().min(250).max(25000),

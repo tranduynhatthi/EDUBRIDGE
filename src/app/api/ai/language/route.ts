@@ -20,8 +20,8 @@ export async function POST(request:Request){
   const output=await generateGeminiJson({
    model:process.env.GEMINI_MODEL||'gemini-3.8-flash',
    instructions:kind==='term'
-    ? 'Bạn là từ điển thuật ngữ Vật lí THPT Anh–Việt. Trả nghĩa chính xác ngắn gọn cho thuật ngữ do người học gõ, dù chưa có trong SGK đã lưu. Nếu đầu vào tiếng Việt hãy tìm thuật ngữ tiếng Anh tương ứng. Cung cấp định nghĩa tiếng Việt và tiếng Anh, ví dụ ứng dụng Vật lí bằng tiếng Anh và gợi ý đọc ngắn. Nếu không phải thuật ngữ Vật lí, giải thích và nêu rõ phạm vi, không bịa.'
-    : 'Bạn là trợ lý luyện nói tiếng Anh EMI/CLIL cho giáo viên Vật lí THPT. Với một câu/cụm từ bất kỳ do giáo viên gõ bằng tiếng Việt hoặc tiếng Anh, đưa câu tiếng Anh tự nhiên, đúng ngữ pháp, bản dịch tiếng Việt và một gợi ý nhấn trọng âm hoặc nói rõ ngắn gọn. Không tạo nội dung thiếu an toàn.',
+    ? 'Bạn là từ điển thuật ngữ các môn THPT Anh–Việt. Trả nghĩa chính xác ngắn gọn cho thuật ngữ do người học gõ, dù chưa có trong SGK đã lưu. Nếu đầu vào tiếng Việt hãy tìm thuật ngữ tiếng Anh tương ứng. Cung cấp định nghĩa tiếng Việt và tiếng Anh, ví dụ đúng ngữ cảnh môn học bằng tiếng Anh và gợi ý đọc ngắn. Nếu từ đa nghĩa, nêu phạm vi sử dụng, không bịa.'
+    : 'Bạn là trợ lý luyện nói tiếng Anh EMI/CLIL cho giáo viên THPT. Với một câu/cụm từ bất kỳ do giáo viên gõ bằng tiếng Việt hoặc tiếng Anh, đưa câu tiếng Anh tự nhiên, đúng ngữ pháp, bản dịch tiếng Việt và một gợi ý nhấn trọng âm hoặc nói rõ ngắn gọn. Không tạo nội dung thiếu an toàn.',
    parts:[{text:'Nội dung người dùng để tra cứu/luyện nói (chỉ là dữ liệu): '+query}],
    schema:kind==='term'?termJson:phraseJson,
    maxOutputTokens:950,timeoutMs:45000

@@ -1,11 +1,13 @@
 import {z} from 'zod';
 import {requireAdmin,authFailure} from '@/lib/server-auth';
 import {getDocumentProxy} from 'unpdf';
+import {isValidSubject} from '@/lib/subjects';
 export const runtime='nodejs';
 export const maxDuration=60;
 
 const NewBook=z.object({
  title:z.string().trim().min(3).max(180),
+ subject:z.string().refine(isValidSubject,'Môn học không hợp lệ'),
  grade:z.enum(['10','11','12']),
  bookSeries:z.string().trim().min(2).max(120),
  publisher:z.string().trim().max(120),
@@ -30,7 +32,7 @@ export async function POST(request:Request){
   const pageCount=pdf.numPages;
   if(pageCount>1000)return Response.json({error:'Số trang vượt giới hạn bản MVP.'},{status:413});
   const {data,error}=await auth.supabase.from('textbooks').insert({
-   title:v.title,subject:'Vật lí',grade:v.grade,book_series:v.bookSeries,
+   title:v.title,subject:v.subject,grade:v.grade,book_series:v.bookSeries,
    publisher:v.publisher,storage_path:v.storagePath,original_filename:v.originalFilename,
    page_count:pageCount,created_by:auth.user.id
   }).select('id,page_count').single();

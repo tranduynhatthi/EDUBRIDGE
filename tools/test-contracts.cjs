@@ -25,3 +25,13 @@ assert(sql.includes('enable row level security'),'Textbook data must have RLS');
 assert(sql.includes('is_published and exists'),'Non-admins can only read published content');
 assert(!fs.existsSync(path.join(root,'src/app/api/files/extract/route.ts')),'Old teacher-upload endpoint must be removed');
 console.log('PASS: catalog approval retained; own teacher source is validated and access controlled.');
+
+const dashboard=read('src/app/dashboard/page.tsx');
+assert(dashboard.includes('Xin chào, {displayName}'),'Greeting must show signed-in teacher name');
+assert(dashboard.includes('SUBJECT_GROUPS'),'Dashboard must provide subject buttons');
+assert(teacher.includes('value={subject}'),'Teacher must choose a subject');
+assert(!teacher.includes('Bộ sách giáo khoa<select'),'Builder must not require book-series selection');
+assert(read('src/lib/schema.ts').includes('isValidSubject'),'Uploaded source subject must be validated');
+assert(read('src/app/api/ai/lesson/route.ts').includes('subject:custom.data.subject'),'AI must preserve submitted subject');
+assert(read('src/app/api/admin/books/route.ts').includes('subject:v.subject'),'Library must persist subject');
+console.log('PASS: THPT subjects, personalized home, subject-aware generation and no book-series picker.');

@@ -10,12 +10,12 @@ export async function POST(request:Request){
  const parsed=Input.safeParse(await request.json().catch(()=>null));
  if(!parsed.success)return Response.json({error:'Thiếu mã bộ sách hợp lệ.'},{status:400});
  const {data:book,error}=await auth.supabase.from('textbooks')
-  .select('id,grade,title,book_series,page_count').eq('id',parsed.data.bookId).single();
+  .select('id,subject,grade,title,book_series,page_count').eq('id',parsed.data.bookId).single();
  if(error||!book)return Response.json({error:'Không tìm thấy bộ sách.'},{status:404});
  // Do not apply page mappings to different editions/files.
  const titleOk=book.title.toLowerCase().normalize('NFC').includes('vật lí 12');
  const seriesOk=book.book_series.toLowerCase().normalize('NFC').includes('kết nối tri thức');
- if(book.grade!=='12'||book.page_count!==catalog.pdfPageCount||!titleOk||!seriesOk){
+ if(book.subject!=='Vật lí'||book.grade!=='12'||book.page_count!==catalog.pdfPageCount||!titleOk||!seriesOk){
   return Response.json({error:'Danh mục này chỉ dành cho đúng bản Vật lí 12 – Kết nối tri thức (PDF 126 trang) đã đối chiếu.'},{status:422});
  }
  // Fingerprint the user-provided PDF; 126 pages alone is not enough to identify an edition.

@@ -4,14 +4,16 @@ import {BookOpen,BookMarked,ScanText,CheckCircle2,FileUp,Info,LibraryBig,LoaderC
 import AppShell from '@/components/AppShell';
 import RequireLogin from '@/components/RequireLogin';
 import {authorizedFetch,supabaseBrowser} from '@/lib/supabase';
+import {SUBJECT_GROUPS,isValidSubject,type SubjectName} from '@/lib/subjects';
 
-type Book={id:string,title:string,grade:string,book_series:string,publisher:string,page_count:number,is_active:boolean};
+type Book={id:string,title:string,subject:string,grade:string,book_series:string,publisher:string,page_count:number,is_active:boolean};
 type CatalogLesson={id:string,textbook_id:string,sort_order:number,chapter:string,title:string,start_page:number,end_page:number,source_text:string,extraction_note:string,is_published:boolean};
 export default function LibraryAdmin(){
  const [admin,setAdmin]=useState<boolean|null>(null);
  const [books,setBooks]=useState<Book[]>([]);
  const [catalog,setCatalog]=useState<CatalogLesson[]>([]);
  const [bookTitle,setBookTitle]=useState('Vật lí 12');
+ const [subject,setSubject]=useState<SubjectName>('Vật lí');
  const [grade,setGrade]=useState<'10'|'11'|'12'>('12');
  const [series,setSeries]=useState('Kết nối tri thức với cuộc sống');
  const [publisher,setPublisher]=useState('Nhà xuất bản Giáo dục Việt Nam');
@@ -34,10 +36,10 @@ export default function LibraryAdmin(){
  const selected=books.find(b=>b.id===selectedBook);
  const selectedRecord=catalog.find(l=>l.id===editId);
  const catalogOfBook=catalog.filter(l=>l.textbook_id===selectedBook);
- const isPhysics12=!!selected&&selected.grade==='12'&&selected.page_count===126&&selected.book_series.toLowerCase().includes('kết nối tri thức');
+ const isPhysics12=!!selected&&selected.subject==='Vật lí'&&selected.grade==='12'&&selected.page_count===126&&selected.book_series.toLowerCase().includes('kết nối tri thức');
  async function refresh(){
   const [b,l]=await Promise.all([
-   supabaseBrowser().from('textbooks').select('id,title,grade,book_series,publisher,page_count,is_active').order('created_at',{ascending:false}),
+   supabaseBrowser().from('textbooks').select('id,title,subject,grade,book_series,publisher,page_count,is_active').order('created_at',{ascending:false}),
    supabaseBrowser().from('textbook_lessons').select('id,textbook_id,sort_order,chapter,title,start_page,end_page,source_text,extraction_note,is_published').order('sort_order')
   ]);
   if(b.error)throw b.error;if(l.error)throw l.error;
@@ -65,7 +67,7 @@ export default function LibraryAdmin(){
   try{
    const {error:upError}=await supabaseBrowser().storage.from('edubridge-textbooks').upload(path,pdf,{contentType:'application/pdf',upsert:false});
    if(upError)throw upError;
-   const r=await authorizedFetch('/api/admin/books',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:bookTitle,grade,bookSeries:series,publisher,storagePath:uuid,originalFilename:pdf.name})});
+   const r=await authorizedFetch('/api/admin/books',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:bookTitle,subject,grade,bookSeries:series,publisher,storagePath:uuid,originalFilename:pdf.name})});
    const json=await r.json();if(!r.ok){await supabaseBrowser().storage.from('edubridge-textbooks').remove([path]);throw new Error(json.error||'Không tạo được sách.');}
    setStatus(`Đã nhập ${bookTitle} (${json.pageCount} trang PDF) vào kho riêng tư. Hãy khai báo các bài.`);
    setPdf(null);await refresh();setSelectedBook(json.id);
@@ -111,14 +113,14 @@ export default function LibraryAdmin(){
  {error&&<div className="error" role="alert" style={{marginBottom:18}}>{error}</div>}{status&&<div className="success-note" style={{marginBottom:18}}><CheckCircle2 size={17}/> {status}</div>}
  <div className="admin-layout">
  <section className="white-panel form-section"><h2><span className="step-dot">1</span> Nhập một bộ SGK vào thư viện</h2><p className="muted">PDF chỉ được lưu ở kho riêng tư. Chỉ nhập sách mà nhóm có quyền sử dụng.</p>
- <form onSubmit={uploadBook} className="admin-form"><label className="field">Tên sách<input value={bookTitle} minLength={3} onChange={e=>setBookTitle(e.target.value)} required/></label>
+ <form onSubmit={uploadBook} className="admin-form"><label className="field">Môn học<select value={subject} onChange={e=>{if(isValidSubject(e.target.value)){setSubject(e.target.value);setBookTitle(e.target.value+" "+grade);}}}>{SUBJECT_GROUPS.map(g=><optgroup key={g.id} label={g.label}>{g.items.map(s=><option key={s} value={s}>{s}</option>)}</optgroup>)}</select></label><label className="field">Tên sách<input value={bookTitle} minLength={3} onChange={e=>setBookTitle(e.target.value)} required/></label>
  <label className="field">Bộ sách<input value={series} minLength={2} onChange={e=>setSeries(e.target.value)} required/></label>
  <div className="form-grid"><label className="field">Lớp<select value={grade} onChange={e=>setGrade(e.target.value as '10'|'11'|'12')}><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></label>
  <label className="field">Nhà xuất bản<input value={publisher} onChange={e=>setPublisher(e.target.value)}/></label></div>
  <label className="upload-box"><FileUp size={24}/><b>{pdf?pdf.name:'Chọn PDF SGK (≤ 30 MB)'}</b><span>Sách PDF nhiều trang, có thể cần đối chiếu nội dung ảnh/công thức</span><input type="file" accept="application/pdf,.pdf" onChange={fileChange} hidden/></label>
  <button disabled={busy||!pdf} type="submit" className="primary-btn">{busy?<LoaderCircle className="rotating" size={17}/>:<FileUp size={17}/>} Nhập sách</button></form></section>
  <section className="white-panel form-section"><h2><span className="step-dot">2</span> Khai báo từng bài theo trang PDF</h2>
- <form onSubmit={importLesson} className="admin-form"><label className="field">Chọn sách đã nhập<select value={selectedBook} onChange={e=>setSelectedBook(e.target.value)} required><option value="">Chưa có sách</option>{books.map(b=><option key={b.id} value={b.id}>{b.title} – {b.book_series} – {b.grade} ({b.page_count} trang)</option>)}</select></label>
+ <form onSubmit={importLesson} className="admin-form"><label className="field">Chọn sách đã nhập<select value={selectedBook} onChange={e=>setSelectedBook(e.target.value)} required><option value="">Chưa có sách</option>{books.map(b=><option key={b.id} value={b.id}>{b.subject} · {b.title} – {b.book_series} – {b.grade} ({b.page_count} trang)</option>)}</select></label>
  <div className="form-grid"><label className="field">Số thứ tự bài<input type="number" min={1} max={500} value={sortOrder} onChange={e=>setSortOrder(Number(e.target.value))} required/></label>
  <label className="field">Chương<input value={chapter} onChange={e=>setChapter(e.target.value)}/></label></div>
  <label className="field">Tên bài<input value={lessonTitle} minLength={5} onChange={e=>setLessonTitle(e.target.value)} required/></label>

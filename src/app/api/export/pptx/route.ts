@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   let id: string;
   try {id = (await request.json()).id;} catch {return Response.json({error:'Yêu cầu không hợp lệ.'},{status:400});}
   if (typeof id !== 'string' || !/^[0-9a-fA-F-]{36}$/.test(id)) return Response.json({error: 'Mã bài học không hợp lệ.'}, {status:400});
-  const {data: record, error} = await context.supabase.from('lessons').select('title,grade,generated_content').eq('id',id).single();
+  const {data: record, error} = await context.supabase.from('lessons').select('title,subject,grade,generated_content').eq('id',id).single();
   if (error || !record) return Response.json({error: 'Không tìm thấy bài học hoặc không có quyền truy cập.'}, {status:404});
   const parsed = LessonResultSchema.safeParse(record.generated_content);
   if (!parsed.success) return Response.json({error:'Dữ liệu bài học không hợp lệ.'}, {status:422});
@@ -23,10 +23,10 @@ export async function POST(request: Request) {
     const deck = new PptxGenJS();
     deck.layout = 'LAYOUT_WIDE';
     deck.author = 'EDUBRIDGE';
-    deck.subject = 'Bài giảng Vật lí bằng tiếng Anh';
+    deck.subject = 'Bài giảng '+record.subject+' bằng tiếng Anh';
     deck.title = record.title;
     const width = 13.333, height = 7.5;
-    const navy = '14254A', accent = 'E34952', muted = '667085';
+    const navy = '7C2D12', accent = 'EA580C', muted = '78716C';
     const make = (heading: string, order: number) => {
       const s = deck.addSlide();
       s.background = {color:'FFFFFF'};
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     };
     let n = 1;
     const cover = make(content.lessonTitleEn || record.title, n++);
-    cover.addText(`Physics · Grade ${record.grade}  |  EMI/CLIL`,{x:0.68,y:2.27,w:11.5,h:0.65,fontSize:23,color:navy,margin:0});
+    cover.addText(`${record.subject} · Grade ${record.grade}  |  EMI/CLIL`,{x:0.68,y:2.27,w:11.5,h:0.65,fontSize:23,color:navy,margin:0});
     cover.addText('Teaching content reviewed and adapted by the teacher',{x:0.68,y:5.7,w:11.6,h:0.4,fontSize:15,color:muted,margin:0});
     const objectives = make('Learning Objectives',n++);
     objectives.addText(content.contentObjectives.map((o,i)=>`${i+1}. ${o}`).join('\n\n'),{x:0.85,y:2,w:11.7,h:4,fontSize:22,color:navy,margin:0,breakLine:false});

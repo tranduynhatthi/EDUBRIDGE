@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {generateGeminiJson,notesJsonSchema} from '@/lib/gemini';
+import {generateGeminiJson,notesJsonSchema,describeGeminiError} from '@/lib/gemini';
 import {PDFDocument} from 'pdf-lib';
 import {requireAdmin,authFailure} from '@/lib/server-auth';
 export const runtime='nodejs';
@@ -35,6 +35,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   const copied=await single.copyPages(original,indices);
   copied.forEach(page=>single.addPage(page));
   const bytes=await single.save({useObjectStreams:true});
+  console.info('EDUBRIDGE PDF excerpt prepared',{lessonId:id,pages:n,bytes:bytes.length,model:process.env.GEMINI_VISION_MODEL||process.env.GEMINI_MODEL||'gemini-3.8-flash'});
   if(bytes.length>13*1024*1024)return Response.json({error:'PDF bài vượt giới hạn gửi trực tiếp Gemini (tối đa 13 MiB trước mã hóa). Hãy giảm dung lượng hoặc tách trang.'},{status:413});
   const generated=await generateGeminiJson({
    model:process.env.GEMINI_VISION_MODEL||process.env.GEMINI_MODEL||'gemini-3.8-flash',
@@ -46,7 +47,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
    schema:notesJsonSchema,maxOutputTokens:12000,timeoutMs:110000
   });
   const parsed=NotesSchema.safeParse(generated);
-  if(!parsed.success)return Response.json({error:'Gemini trả ghi chú PDF không đúng định dạng. Hãy thử lại hoặc kiểm tra model.'},{status:502});
+  if(!parsed.success)return Response.json({error:'Gemini đã phản hồi nhưng nội dung chưa đạt yêu cầu (ít nhất 300 ký tự; tối đa 24.000 ký tự). Hãy thử đọc lại từng phần ngắn.',code:'INVALID_EXTRACTED_NOTES'},{status:502});
   const data=parsed.data;
   if(!data)return Response.json({error:'AI không trả cấu trúc hợp lệ.'},{status:502});
   const note=(`BẢN NHÁP AI đọc PDF ảnh. CHƯA HẬU KIỂM. `+(data.warnings.length?'Cần kiểm tra: '+data.warnings.join(' | '):'Đối chiếu mọi công thức, đơn vị và hình với SGK trước khi duyệt.')).slice(0,1200);
@@ -56,6 +57,10 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   if(saveError||!updated)return Response.json({error:'Bản nháp đã thay đổi hoặc không thể lưu. Tải lại trang.'},{status:409});
   return Response.json({id:updated.id,sourceText:data.sourceText,extractionNote:note,warnings:data.warnings,
    notice:'AI đã đọc trang ảnh và tạo BẢN NHÁP. Hãy kiểm chứng đầy đủ trước khi công bố.'});
- }catch(e){console.error('Gemini PDF draft',e instanceof Error?e.message:'unknown');
-  return Response.json({error:'Gemini chưa đọc được PDF. Kiểm tra model hỗ trợ PDF, API key, hạn mức hoặc kích thước tệp.'},{status:502});}
+ }catch(e){
+   const detail=describeGeminiError(e);
+   console.error('EDUBRIDGE PDF extraction failed',{stage:'pdf_or_gemini',code:detail.code,kind:e instanceof Error?e.name:'unknown'});
+   if(detail.code!=='GEMINI_UNKNOWN_ERROR')return Response.json({error:detail.message,code:detail.code},{status:detail.status});
+   return Response.json({error:'Không xử lý được tệp PDF đã lưu. Hãy kiểm tra tệp, thử bài khác hoặc tải tệp của riêng bài để xử lý.',code:'PDF_PROCESSING_FAILED'},{status:502});
+ }
 }

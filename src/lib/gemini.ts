@@ -173,6 +173,28 @@ export const notesJsonSchema = {
 } as const;
 type GeminiPayload = {candidates?:Array<{content?:{parts?:Array<{text?:string}>};finishReason?:string}>;promptFeedback?:{blockReason?:string}};
 export class GeminiRequestError extends Error { readonly code:string; constructor(code:string){super(code);this.code=code;this.name='GeminiRequestError';} }
+export function describeGeminiError(err:unknown):{code:string;message:string;status:number}{
+ const code=err instanceof GeminiRequestError?err.code:
+   err instanceof Error&&(err.name==='TimeoutError'||err.name==='AbortError')?'GEMINI_TIMEOUT':
+   'GEMINI_UNKNOWN_ERROR';
+ const messages:Record<string,string>={
+  MISSING_GEMINI_KEY:'Chưa thiết lập GEMINI_API_KEY trong Vercel (Production).',
+  INVALID_MODEL:'Tên model Gemini cấu hình không hợp lệ.',
+  GEMINI_QUOTA_LIMIT:'Gemini đã hết hạn mức API hoặc vượt giới hạn số lần gọi. Kiểm tra Usage/Billing ở Google AI Studio.',
+  GEMINI_KEY_OR_PERMISSION:'Khóa Gemini API không hợp lệ hoặc dự án Google không được cấp quyền gọi model.',
+  GEMINI_MODEL_NOT_FOUND:'Không tìm thấy model Gemini. Kiểm tra GEMINI_VISION_MODEL trong Vercel.',
+  GEMINI_BAD_REQUEST:'Google từ chối cấu trúc yêu cầu Gemini (HTTP 400). Hãy thử model hỗ trợ PDF và cấu hình lại API.',
+  GEMINI_SERVER_BUSY:'Máy chủ Gemini tạm thời quá tải. Hãy thử lại sau ít phút.',
+  GEMINI_BLOCKED:'Gemini đã chặn phản hồi do bộ lọc nội dung.',
+  GEMINI_INVALID_JSON:'Gemini trả về dữ liệu không đọc được thành JSON. Hãy thử lại.',
+  GEMINI_TIMEOUT:'Gemini xử lý PDF quá thời gian. Hãy thử với ít trang hơn.',
+  GEMINI_UNKNOWN_ERROR:'Không thể gọi Gemini. Kiểm tra mạng, API key, quyền model và hạn mức.'
+ };
+ const message=messages[code]??(code.startsWith('GEMINI_EMPTY_')?
+  'Gemini không trả nội dung (lý do: '+code.replace('GEMINI_EMPTY_','')+'). Thử tệp ngắn hơn hoặc kiểm tra hạn mức token.':
+  code.startsWith('GEMINI_HTTP_')?'Gemini trả về '+code.replace('GEMINI_HTTP_','HTTP ')+'; hãy kiểm tra cấu hình và thử lại.':messages.GEMINI_UNKNOWN_ERROR);
+ return {code,message:message!,status:code==='GEMINI_QUOTA_LIMIT'?429:code==='GEMINI_TIMEOUT'?504:502};
+}
 export async function generateGeminiJson(options:{model:string;instructions:string;parts:GeminiPart[];schema:object;maxOutputTokens?:number;timeoutMs?:number}):Promise<unknown>{
  const apiKey=process.env.GEMINI_API_KEY;
  if(!apiKey)throw new GeminiRequestError('MISSING_GEMINI_KEY');
@@ -181,10 +203,12 @@ export async function generateGeminiJson(options:{model:string;instructions:stri
  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
   method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},
   body:JSON.stringify({systemInstruction:{parts:[{text:options.instructions}]},contents:[{role:'user',parts:options.parts}],
-   generationConfig:{responseMimeType:'application/json',responseSchema:options.schema,maxOutputTokens:options.maxOutputTokens??8192,temperature:0.2}}),
+   generationConfig:{responseMimeType:'application/json',responseSchema:options.schema,maxOutputTokens:options.maxOutputTokens??8192, ...(model.startsWith('gemini-3.')||model.startsWith('gemini-4-')?{thinkingConfig:{thinkingLevel:'low'}}:{})}}),
   signal:AbortSignal.timeout(options.timeoutMs??100000)
  });
- if(!response.ok){if(response.status===429)throw new GeminiRequestError('GEMINI_QUOTA_LIMIT');
+ if(!response.ok){if(response.status===400)throw new GeminiRequestError('GEMINI_BAD_REQUEST');
+  if(response.status===500||response.status===503||response.status===529)throw new GeminiRequestError('GEMINI_SERVER_BUSY');
+  if(response.status===429)throw new GeminiRequestError('GEMINI_QUOTA_LIMIT');
   if(response.status===401||response.status===403)throw new GeminiRequestError('GEMINI_KEY_OR_PERMISSION');
   if(response.status===404)throw new GeminiRequestError('GEMINI_MODEL_NOT_FOUND');
   throw new GeminiRequestError('GEMINI_HTTP_'+response.status);}

@@ -31,6 +31,10 @@ export default function LibraryAdmin(){
  const [editNote,setEditNote]=useState('');
  const [confirmed,setConfirmed]=useState(false);
  const [busy,setBusy]=useState(false);
+ const [extractError,setExtractError]=useState('');
+ const [extractStatus,setExtractStatus]=useState('');
+ const [aiCheckBusy,setAiCheckBusy]=useState(false);
+ const [aiCheckResult,setAiCheckResult]=useState('');
  const [status,setStatus]=useState('');
  const [error,setError]=useState('');
  const selected=books.find(b=>b.id===selectedBook);
@@ -56,7 +60,7 @@ export default function LibraryAdmin(){
    if(allowed)await refresh();
   }catch(e){if(active)setError(e instanceof Error?e.message:'Không thể đọc kho sách.');}
  })();return()=>{active=false;};},[]);
- function selectEditor(lesson:CatalogLesson){setEditId(lesson.id);setEditText(lesson.source_text);setEditNote(lesson.extraction_note);setConfirmed(false);setStatus('');setError('');}
+ function selectEditor(lesson:CatalogLesson){setEditId(lesson.id);setEditText(lesson.source_text);setEditNote(lesson.extraction_note);setConfirmed(false);setStatus('');setError('');setExtractError('');setExtractStatus('');setAiCheckResult('');}
  function fileChange(e:ChangeEvent<HTMLInputElement>){const f=e.target.files?.[0];setPdf(f||null);}
  async function uploadBook(e:FormEvent){
   e.preventDefault();setStatus('');setError('');
@@ -92,14 +96,19 @@ export default function LibraryAdmin(){
   }catch(e){setError(e instanceof Error?e.message:'Không tạo được mục lục.');}finally{setBusy(false);}
  }
  async function analyzeScan(){
-  if(!editId)return;setBusy(true);setError('');setStatus('');
+  if(!editId)return;setBusy(true);setError('');setStatus('');setExtractError('');setExtractStatus('Đang tải và tách các trang SGK từ kho riêng tư, sau đó gửi Gemini đọc hình ảnh. Vui lòng chờ...');
   try{
    const r=await authorizedFetch(`/api/admin/lessons/${editId}/analyze-pdf`,{method:'POST'});
-   const json=await r.json();if(!r.ok)throw new Error(json.error||'AI không đọc được trang PDF ảnh.');
-   setEditText(json.sourceText);setEditNote(json.extractionNote);setConfirmed(false);
+   const json=await r.json();if(!r.ok)throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'AI không đọc được trang PDF ảnh.'));
+   setExtractStatus('Gemini đã trả nội dung nháp.');setEditText(json.sourceText);setEditNote(json.extractionNote);setConfirmed(false);
    await refresh();setStatus('AI đã đọc PDF ảnh và ghi BẢN NHÁP. Hãy mở SGK đối chiếu từng công thức và hình vẽ trước khi duyệt.');
-  }catch(e){setError(e instanceof Error?e.message:'Không tạo được bản nháp từ SGK.');}finally{setBusy(false);}
+  }catch(e){const msg=e instanceof Error?e.message:'Không tạo được bản nháp từ SGK.';setExtractError(msg);setError(msg);setExtractStatus('Trích xuất thất bại; dữ liệu chưa bị ghi đè.');}finally{setBusy(false);}
  }
+ async function checkGemini(){setAiCheckBusy(true);setAiCheckResult('Đang thử kết nối thực tế với Gemini...');setExtractError('');try{
+  const r=await authorizedFetch('/api/admin/gemini-health',{method:'POST'});
+  const j=await r.json();if(!r.ok)throw new Error((j.code?'['+j.code+'] ':'')+(j.error||'Không kết nối được Gemini.'));
+  setAiCheckResult('Đã kết nối Gemini thành công ('+j.model+'). Hãy thử đọc PDF lại.');
+ }catch(e){setAiCheckResult('Kiểm tra Gemini thất bại: '+(e instanceof Error?e.message:'Lỗi chưa xác định'));}finally{setAiCheckBusy(false);}}
  async function saveReview(publish:boolean){
   if(!editId)return;setError('');setStatus('');setBusy(true);
   try{
@@ -144,7 +153,13 @@ export default function LibraryAdmin(){
  <div className="attention"><Info size={19}/><div>Đọc đối chiếu với bản PDF gốc. Phần trích chữ có thể thiếu hình vẽ, chỉ số trên/dưới, dấu âm, căn thức hoặc ký hiệu. Không công bố nếu chưa xử lí lỗi kiến thức.</div></div>
  {!selectedRecord.is_published&&!selectedRecord.source_text.trim()&&<div style={{marginBottom:18}}>
  <p className="muted">Bài này mới có tên và phạm vi trang. Tệp SGK là PDF ảnh quét, nên không thể trích chữ bằng cách thông thường. Bấm nút dưới để AI đọc các trang của đúng bài; kết quả chỉ là bản nháp, cần giáo viên duyệt.</p>
- <button type="button" className="primary-btn" onClick={analyzeScan} disabled={busy}><ScanText size={17}/> {busy?'Đang đọc trang PDF…':'AI đọc PDF bài này → Tạo nguồn nháp'}</button>
+ <div className="action-row">
+ <button type="button" className="secondary-btn" onClick={checkGemini} disabled={aiCheckBusy||busy}><ShieldCheck size={16}/>{aiCheckBusy?'Đang kiểm tra Gemini...':'Kiểm tra kết nối Gemini'}</button>
+ <button type="button" className="primary-btn" onClick={analyzeScan} disabled={busy||aiCheckBusy}><ScanText size={17}/> {busy?'Đang đọc PDF, vui lòng chờ…':'AI đọc PDF bài này → Tạo nguồn nháp'}</button>
+ </div>
+ {aiCheckResult&&<p role="status" style={{marginTop:12}}>{aiCheckResult}</p>}
+ {extractStatus&&<p role="status" style={{marginTop:8}}>{extractStatus}</p>}
+ {extractError&&<div className="error" role="alert" style={{marginTop:12}}>{extractError}</div>}
  </div>}
  <label className="field">Toàn văn trích xuất – có thể sửa<textarea rows={19} value={editText} onChange={e=>{setEditText(e.target.value);setConfirmed(false);}}/></label>
  <p className="small-count">{editText.length.toLocaleString('vi-VN')} / 30.000 ký tự</p>

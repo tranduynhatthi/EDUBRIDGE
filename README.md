@@ -1,20 +1,22 @@
-# EDUBRIDGE MVP 1.2 – SGK Vật lí 12 (Kết nối tri thức)
+# EDUBRIDGE MVP 1.5 (Gemini API) – SGK Vật lí 12 (Kết nối tri thức)
 
 **Mục tiêu:** Quản trị viên tải đúng tệp `SGK Vật lí 12-mau.pdf` (126 trang) lên hệ thống một lần, nhấn nút tạo **25 mục bài học**, sau đó AI giúp chuẩn bị bản nháp nội dung từ **trang PDF dạng ảnh**, quản trị viên hậu kiểm từng bài. Giáo viên đăng nhập chỉ việc **chọn lớp 12 → chọn bộ sách → chọn bài đã duyệt → Tạo bài dạy bằng AI**.
 
-**Trạng thái giao hàng:** Đã viết mã nguồn và lập mục lục chính xác theo PDF người dùng cung cấp. Chưa triển khai lên máy chủ của bạn; chưa gọi OpenAI API hoặc Supabase thực tế. **25 mục đều khởi tạo dưới dạng NHÁP**, không giả định đã có bản tóm tắt chính xác và không tự công bố.
+**Trạng thái giao hàng:** Đã viết mã nguồn và lập mục lục chính xác theo PDF người dùng cung cấp. Đã triển khai giao diện lên Vercel và tạo Supabase; chưa kiểm thử Gemini bằng API key thực tế. **25 mục đều khởi tạo dưới dạng NHÁP**, không giả định đã có bản tóm tắt chính xác và không tự công bố.
 
-## 1. Tệp mới trong bản 1.2
+## 1. Cấu hình hiện tại và tệp quan trọng
 
 - `catalog/physics12_25_bai.csv`: toàn bộ 25 bài, 4 chương, số trang in và trang PDF tương ứng. Mở được bằng Excel.
 - `catalog/physics12_25_bai.json` và `src/data/physics12-ktst.json`: danh mục dùng trong WebApp; có dấu vân tay SHA-256 **đúng tệp PDF người dùng gửi** để tránh nhầm với ấn bản khác.
 - `supabase/03_seed_scanned_pdf.sql`: cho phép mục bài nháp chưa có văn bản; cấm công bố bài không có nội dung.
 - `src/app/api/admin/catalog-seed/route.ts`: thêm một lần 25 mục vào đúng đầu sách, không tạo lại số thứ tự đã có.
-- `src/app/api/admin/lessons/[id]/analyze-pdf/route.ts`: máy chủ tải PDF riêng tư, **cắt đúng trang bài học** và chuyển đến OpenAI model có thể đọc hình ảnh PDF, tạo GHI CHÚ NGUỒN BẢN NHÁP cho người quản trị kiểm tra. Không cần OCR cài trên máy.
+- `src/app/api/admin/lessons/[id]/analyze-pdf/route.ts`: máy chủ tải PDF riêng tư, **cắt đúng trang bài học** và chuyển đến Gemini model có thể đọc hình ảnh PDF, tạo GHI CHÚ NGUỒN BẢN NHÁP cho người quản trị kiểm tra. Không cần OCR cài trên máy.
 - `src/app/admin/library/page.tsx`: nút nhập mục lục tự động và nút đọc PDF ảnh từng bài.
 - `src/app/builder/page.tsx`: mặc định lớp 12.
 
 **Không có bản PDF sách giáo khoa trong ZIP**. Hãy dùng lại **chính file đã gửi** để nhập vào hệ thống. PDF gốc chỉ nằm trong storage Private của Supabase do bạn điều hành.
+
+Xem `docs/06_GEMINI_API.md` để tạo API key, thiết lập Vercel và kiểm tra lệnh gọi Gemini; không cần đổi schema Supabase khi đổi model.
 
 ## 2. Cài từ đầu trên Windows (đúng thứ tự)
 
@@ -24,18 +26,18 @@
    - `supabase/01_schema.sql`
    - `supabase/02_textbook_library.sql`
    - `supabase/03_seed_scanned_pdf.sql`
-4. Supabase → Project Settings → API Keys, lấy Project URL và publishable key; tạo tài khoản OpenAI API, thiết lập thanh toán/hạn mức.
-5. Tạo `.env.local` bằng cách sao chép `.env.example`, rồi điền:
+4. Supabase → Project Settings → API Keys, lấy Project URL và publishable key; tạo tài khoản Gemini API, thiết lập thanh toán/hạn mức.
+5. Tạo `.env.local` bằng cách sao chép `.env.example` nếu chạy máy cá nhân; trên Vercel nhập các biến trong Settings → Environment Variables:
 
 ```ini
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
-OPENAI_API_KEY=sk-YOUR_KEY
-OPENAI_MODEL=gpt-5.4-mini
-OPENAI_VISION_MODEL=gpt-5.4-mini
+GEMINI_API_KEY=YOUR_GOOGLE_AI_STUDIO_KEY
+GEMINI_MODEL=gemini-3.8-flash
+GEMINI_VISION_MODEL=gemini-3.8-flash
 ```
 
-`OPENAI_MODEL` và `OPENAI_VISION_MODEL` phải là model có thật và tài khoản API của bạn **được phép sử dụng**; model đọc PDF phải hỗ trợ vision và file input. Tên trong ví dụ là tham số tùy chỉnh; nếu API báo “model not found”, thay bằng model đã được cấp quyền. **ChatGPT Plus và OpenAI API tính phí riêng.** Không chia sẻ `.env.local`.
+`GEMINI_MODEL` và `GEMINI_VISION_MODEL` phải là model có thật và tài khoản API của bạn **được phép sử dụng**; model đọc PDF phải hỗ trợ vision và file input. Tên trong ví dụ là tham số tùy chỉnh; nếu API báo “model not found”, thay bằng model đã được cấp quyền. **Google Gemini API (Google AI Studio) có hạn mức và cơ chế tính phí riêng với ChatGPT.** Không chia sẻ `.env.local`.
 
 6. Trong VS Code → Terminal → New Terminal, chạy:
 
@@ -68,7 +70,7 @@ Làm mới trình duyệt. Sẽ xuất hiện mục **Quản trị SGK**.
 ### Xử lí SGK PDF dạng ảnh quét
 
 7. Chọn **Bài 1. Cấu trúc của chất. Sự chuyển thể** → bấm **AI đọc PDF bài này → Tạo nguồn nháp**. Máy chủ chỉ gửi các trang PDF **7–10** tương ứng trang SGK in **6–9**, không gửi cả cuốn.
-8. Đợi AI phân tích PDF và tạo nguồn bản nháp tiếng Việt (tốn phí OpenAI API). Thời gian tùy model và máy chủ, có thể quá giới hạn khi dùng hosting miễn phí.
+8. Đợi AI phân tích PDF và tạo nguồn bản nháp tiếng Việt (tốn phí Gemini API). Thời gian tùy model và máy chủ, có thể quá giới hạn khi dùng hosting miễn phí.
 9. Trong ô nội dung, xem bản nháp, kiểm tra nguồn PDF **đối với mọi công thức, kí hiệu, hình và đơn vị**, chỉnh sửa cho chính xác. AI có thể nhận nhầm chỉ số trên, dấu hoặc biểu đồ.
 10. Chỉ khi đối chiếu xong mới đánh dấu **Đã đối chiếu và hậu kiểm** → bấm **Duyệt và cho giáo viên chọn**.
 11. Tiếp tục với bài tiếp theo; có thể duyệt dần, không bắt buộc duyệt đủ 25 bài trước khi giáo viên thử bài 1.
@@ -101,7 +103,7 @@ Xem CSV để biết chính xác từng bài. PDF trang **6, 34, 56, 91** là c�
 - Công cụ `AI đọc PDF` chỉ gọi từ API có xác thực admin; truy vấn source lesson qua Supabase RLS.
 - Văn bản từ PDF có thể chứa chỉ dẫn lạ; ứng dụng coi đây là dữ liệu, không phải lệnh.
 - Chỉ dùng tệp SGK mà nhóm được phép sử dụng và chỉ chia sẻ học liệu tạo ra theo phạm vi quyền được cấp. Nền tảng không cấp quyền phát hành lại nội dung hay ảnh sách cho người khác.
-- Khi gọi OpenAI để đọc ảnh sách, **trang PDF bài học sẽ được gửi đến dịch vụ API**. Xác nhận chính sách xử lý dữ liệu, quyền sử dụng và phí API trước khi bật chức năng.
+- Khi gọi Gemini để đọc ảnh sách, **trang PDF bài học sẽ được gửi đến dịch vụ API**. Xác nhận chính sách xử lý dữ liệu, quyền sử dụng và phí API trước khi bật chức năng.
 - Chưa tích hợp giới hạn người dùng/cost limit toàn hệ thống, chương trình giám sát thực tế, xử lí đồng thời nhiều admin, hay luồng học sinh. Không mở rộng công khai trước khi có kiểm thử bảo mật và giới hạn AI.
 
 ## 7. Thử nghiệm chấp nhận sản phẩm
@@ -118,7 +120,7 @@ Xem CSV để biết chính xác từng bài. PDF trang **6, 34, 56, 91** là c�
 
 ## 8. Trạng thái kiểm chứng tại thời điểm giao mã
 
-Đã đối chiếu **mục lục SGK và số trang 25 bài**, kiểm tra cấu trúc tệp bằng công cụ đọc PDF cục bộ; đã viết các endpoint, giao diện và bài kiểm tra tĩnh. **Chưa thể kiểm thử tích hợp với một Supabase/OpenAI account thật** vì không có khóa API và môi trường deployment. Nếu trong quá trình cài đặt phát sinh lỗi, hãy gửi ảnh màn hình/thông báo từ terminal để sửa theo đúng môi trường của bạn.
+Đã đối chiếu **mục lục SGK và số trang 25 bài**, kiểm tra cấu trúc tệp bằng công cụ đọc PDF cục bộ; đã viết các endpoint, giao diện và bài kiểm tra tĩnh. **Chưa thể kiểm thử tích hợp với một Supabase/Gemini account thật** vì không có khóa API và môi trường deployment. Nếu trong quá trình cài đặt phát sinh lỗi, hãy gửi ảnh màn hình/thông báo từ terminal để sửa theo đúng môi trường của bạn.
 
 ## Phiên bản mở rộng – hoàn chỉnh chu trình Bài 1
 

@@ -1,6 +1,6 @@
 {
   "name": "edubridge-mvp-vatli12-select-lesson",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,13 +10,13 @@
     "check:syntax": "node tools/check-source.cjs",
     "test:contracts": "node tools/test-contracts.cjs",
     "test:catalog": "node tools/test-catalog.cjs",
-    "test:mvp": "node tests/mvp-smoke.cjs"
+    "test:mvp": "node tests/mvp-smoke.cjs",
+    "test:gemini": "node tests/gemini-api.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
-    "openai": "^6.0.0",
     "pptxgenjs": "^3.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

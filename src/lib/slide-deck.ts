@@ -1,8 +1,9 @@
 import PptxGenJS from 'pptxgenjs';
 import type {LessonResult} from '@/lib/schema';
+import {makeTeachingVisual} from './lesson-visuals.ts';
 
 export type SlideKind='cover'|'objectives'|'warmup'|'concept'|'process'|'comparison'|'diagram'|'formula'|'example'|'activity'|'quiz'|'summary'|'homework';
-export type DeckInfo={title:string;subject:string;grade:string;level?:string};
+export type DeckInfo={title:string;subject:string;grade:string;level?:string;classroomPhrases?:LessonResult['classroomPhrases']};
 type Slide=ReturnType<PptxGenJS['addSlide']>;
 type ContentSlide=LessonResult['slides'][number];
 const W=13.333,H=7.5;
@@ -45,7 +46,35 @@ function head(s:Slide,title:string,tag:string){
  eyebrow(s,tag,0.75,0.86,9.7);
  txt(s,brief(title,130),0.72,1.21,11.85,0.81,{fontFace:display,fontSize:30.5,bold:true,color:C.dark,fit:'shrink'});
 }
-function note(s:Slide,words:string){s.addNotes(brief(words,4500));}
+const classroomTalk:Record<string,[string,string][]> = {
+ cover:[['Good morning! Today we will explore a new topic.','Chào buổi sáng! Hôm nay chúng ta tìm hiểu một chủ đề mới.'],['What do you already know about this topic?','Các em đã biết gì về chủ đề này?'],['Let us begin with a question.','Chúng ta bắt đầu bằng một câu hỏi.']],
+ objectives:[['By the end of this lesson, you will be able to explain the main ideas.','Cuối bài học, các em có thể giải thích các ý chính.'],['Please read the learning goals.','Hãy đọc các mục tiêu bài học.'],['Which goal is most challenging?','Mục tiêu nào khó nhất?']],
+ visual:[['Look carefully at this diagram.','Hãy quan sát kĩ sơ đồ này.'],['What can you see?','Các em nhìn thấy điều gì?'],['The diagram is simplified. Can you connect it to the text?','Sơ đồ đã được đơn giản hóa. Em có thể liên hệ với nội dung bài không?']],
+ concept:[['Please look at the key idea.','Hãy nhìn vào ý chính.'],['Can you explain this in your own words?','Em có thể giải thích theo cách hiểu của mình không?'],['What evidence from the lesson supports your answer?','Chi tiết nào trong bài hỗ trợ câu trả lời?']],
+ vocabulary:[['Listen and repeat after me.','Hãy nghe và lặp lại theo giáo viên.'],['Use this word in a complete sentence.','Hãy dùng từ này trong một câu hoàn chỉnh.'],['What is the Vietnamese meaning?','Nghĩa tiếng Việt là gì?']],
+ quiz:[['Read all the options before you answer.','Hãy đọc tất cả phương án trước khi trả lời.'],['Why did you choose that option?','Tại sao em chọn phương án đó?'],['Let us check the answer together.','Chúng ta cùng kiểm tra đáp án.']],
+ summary:[['Let us summarise the lesson.','Chúng ta cùng tổng kết bài.'],['What are the three most important ideas?','Ba ý quan trọng nhất là gì?'],['Do you have any questions?','Các em có câu hỏi nào không?']],
+ homework:[['Please review your notes at home.','Hãy xem lại ghi chép ở nhà.'],['Prepare one question for the next lesson.','Hãy chuẩn bị một câu hỏi cho bài sau.'],['Thank you for your participation today.','Cảm ơn các em đã tham gia học hôm nay.']]
+};
+function note(s:Slide,words:string,info?:DeckInfo,phase='concept',index=0){
+ const bank=classroomTalk[phase]??classroomTalk.concept;
+ const source=info?.classroomPhrases??[];
+ const selected=source.length?Array.from({length:Math.min(3,source.length)},(_,j)=>source[(index+j*2)%source.length]):[];
+ const lines=[
+  "TEACHER'S SCRIPT / KỊCH BẢN GIẢNG",
+  String(words||'').slice(0,2750),
+  '',
+  'CLASSROOM ENGLISH / CÂU GIAO TIẾP GỢI Ý'
+ ];
+ for(const [en,vi] of bank)lines.push('• '+en+' — '+vi);
+ if(selected.length){
+  lines.push('', 'LESSON-SPECIFIC PHRASES / CÂU GIAO TIẾP CỦA BÀI');
+  for(const p of selected)lines.push('• '+p.english+' — '+p.vietnamese);
+ }
+ lines.push('', 'TRANSITION / CHUYỂN Ý', '• Now, let us move on to the next part. — Bây giờ, chúng ta chuyển sang phần tiếp theo.');
+ s.addNotes(lines.join('\n').slice(0,4300));
+}
+
 function strip(s:Slide,label:string,text:string,y=6.04){
  rect(s,0.75,y,11.83,0.57,C.soft,true);
  eyebrow(s,label,0.96,y+0.17,1.85,C.deep);
@@ -58,6 +87,18 @@ function tile(s:Slide,x:number,y:number,w:number,h:number,title:string,body:stri
  txt(s,String(i).padStart(2,'0'),x+0.28,y+0.36,0.46,0.17,{fontSize:10.5,color:C.deep,bold:true,align:'center'});
  eyebrow(s,title,x+0.89,y+0.34,w-1.15);
  txt(s,brief(body,190),x+0.31,y+0.97,w-0.63,h-1.21,{fontSize:18,fit:'shrink',valign:'top'});
+}
+
+function illustration(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,kind:SlideKind,i:number,total:number,used:Set<string>){
+ const s=shell(pptx,info,'SCIENTIFIC VISUAL',i,total);
+ head(s,'Visual explanation: '+item.title,'OBSERVE / EXPLAIN / DISCUSS');
+ const image=makeTeachingVisual({subject:info.subject,lessonTitle:info.title,item,kind,used});
+ rect(s,0.74,2.18,11.85,4.37,C.paper,true,C.line);
+ s.addImage({data:image.data,x:0.97,y:2.33,w:11.38,h:3.96});
+ txt(s,'SCHEMATIC • FOR TEACHER REVIEW • NOT A TEXTBOOK PHOTO',0.87,6.64,11.6,0.24,{fontSize:10.7,color:C.muted,bold:true});
+ note(s,(item.teacherScript||'')+'\n\nVISUAL GUIDE: '+image.caption+
+ '\nILLUSTRATION SUGGESTION FROM LESSON: '+(item.visualSuggestion||'Not specified')+
+ '\nReview symbols, scientific accuracy and the diagram labels before teaching.',info,'visual',i);
 }
 function cover(pptx:PptxGenJS,info:DeckInfo,result:LessonResult){
  const s=pptx.addSlide();s.background={color:C.cream};
@@ -74,7 +115,7 @@ function cover(pptx:PptxGenJS,info:DeckInfo,result:LessonResult){
  coords.forEach(([x,y,d],i)=>{ellipse(s,x,y,d,i%2?C.amber:C.soft);ellipse(s,x+d*0.33,y+d*0.33,d*0.34,C.orange);});
  rect(s,9.1,2.27,2.18,0.035,C.amber);rect(s,9.89,4.13,2.0,0.035,C.amber);
  eyebrow(s,'LEARN THROUGH DISCOVERY',8.20,6.69,4.6,C.paper);
- note(s,'Introduce the topic, the learning challenge and the source limitations.');
+ note(s,'Introduce the topic, the learning challenge and the source limitations.',info,'cover',1);
 }
 function objectives(pptx:PptxGenJS,info:DeckInfo,result:LessonResult,i:number,t:number){
  const s=shell(pptx,info,'LEARNING OBJECTIVES',i,t);head(s,'What will we learn today?','CONTENT + LANGUAGE');
@@ -84,7 +125,7 @@ function objectives(pptx:PptxGenJS,info:DeckInfo,result:LessonResult,i:number,t:
   eyebrow(s,title,x+0.33,2.72,5.05,k?C.deep:C.orange);
   bullets(s,values,x+0.32,3.22,5.04,0.86);
  });
- note(s,'Explain content and language objectives. Confirm language support for students.');
+ note(s,'Explain content and language objectives. Confirm language support for students.',info,'objectives',i);
 }
 function warmup(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'ENGAGE',i,t);head(s,item.title,'WARM-UP / PREDICT');
@@ -96,7 +137,7 @@ function warmup(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number
  txt(s,String(k+1),8.74,2.99+k*0.84,0.46,0.16,{fontSize:11,bold:true,align:'center',color:k===1?C.paper:C.deep});
  txt(s,a,9.46,2.90+k*0.84,2.74,0.37,{fontSize:20,bold:true});});
  strip(s,'PAIR TALK',item.studentTask||'Share your prediction with a partner.');
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function concept(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'EXPLORE',i,t);head(s,item.title,'KEY CONCEPT');
@@ -106,7 +147,7 @@ function concept(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  txt(s,'OBSERVE  ·  CONNECT  ·  EXPLAIN',1.08,5.38,4.37,0.22,{fontSize:11,bold:true,color:C.amber});
  bullets(s,item.bullets,6.30,2.65,5.9,0.90);
  strip(s,'CHECKPOINT','Explain one key idea in your own words.');
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function process(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'EXPLORE THE PROCESS',i,t);head(s,item.title,'STEP-BY-STEP');
@@ -121,7 +162,7 @@ function process(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
   if(k<n-1)txt(s,'→',x+w-0.12,3.53,0.44,0.37,{fontSize:22,bold:true,color:C.orange});
  });
  strip(s,'REFLECT','Which step needs the strongest evidence?');
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function comparison(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'COMPARE',i,t);head(s,item.title,'SPOT THE DIFFERENCES');
@@ -129,7 +170,7 @@ function comparison(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:nu
  const gap=0.23,w=(11.84-(values.length-1)*gap)/values.length;
  values.forEach((v,k)=>tile(s,0.75+k*(w+gap),2.45,w,3.24,'FEATURE '+(k+1),v,k+1));
  strip(s,'QUESTION','What is similar and what is different?');
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function diagram(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'CONCEPT MAP',i,t);head(s,item.title,'CONNECT THE IDEAS');
@@ -140,13 +181,13 @@ function diagram(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  parts.forEach((v,k)=>{const [x,y]=positions[k];rect(s,x,y,3.48,1.31,C.paper,true,C.line);
  txt(s,brief(v,140),x+0.20,y+0.15,3.08,0.98,{fontSize:15.9,bold:true,align:'center',fit:'shrink'});});
  eyebrow(s,'EDITABLE VISUAL / TEACHER SHOULD VERIFY LINKS',0.75,6.40,10,C.muted);
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function formula(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'QUANTITATIVE REASONING',i,t);head(s,item.title,'FORMULA + SYMBOLS');
  const options=[item.formula||'',...item.bullets].filter(Boolean);
  const equation=options.find(x=>/[=≈∝]/.test(x)&&x.length<=170);
- if(!equation){bullets(s,item.bullets,1.03,2.61,11.13);strip(s,'VERIFY','No equation verified in source; add it manually.');note(s,item.teacherScript);return;}
+ if(!equation){bullets(s,item.bullets,1.03,2.61,11.13);strip(s,'VERIFY','No equation verified in source; add it manually.');note(s,item.teacherScript,info,'concept',i);return;}
  rect(s,0.74,2.42,8.03,2.43,C.deep,true);
  eyebrow(s,'EQUATION IN SOURCE',1.08,2.84,7,C.amber);
  txt(s,brief(equation,170),1.08,3.40,7.36,0.90,{fontFace:display,fontSize:33,bold:true,color:C.paper,align:'center',fit:'shrink'});
@@ -154,7 +195,7 @@ function formula(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  eyebrow(s,'CHECK FIRST',9.32,2.86,2.9);
  txt(s,'Symbols\nUnits\nConditions',9.32,3.32,2.8,1.13,{fontSize:19,bold:true,color:C.ink});
  item.bullets.filter(x=>x!==equation).slice(0,3).forEach((v,k)=>{const x=0.74+k*4.04;rect(s,x,5.12,3.77,0.88,C.paper,true,C.line);txt(s,brief(v,114),x+0.2,5.22,3.32,0.64,{fontSize:14.0,fit:'shrink'});});
- note(s,item.teacherScript+'\nVerify mathematical meaning, SI units and sign conventions.');
+ note(s,item.teacherScript+'\nVerify mathematical meaning, SI units and sign conventions.',info,'concept',i);
 }
 function example(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'APPLY',i,t);head(s,item.title,'EXAMPLE + REASONING');
@@ -164,7 +205,7 @@ function example(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  rect(s,4.55,2.42,8.02,3.4,C.paper,true,C.line);eyebrow(s,'WORK IT OUT',4.91,2.80,7.1);
  bullets(s,item.bullets,4.90,3.23,7.12,0.70);
  strip(s,'EXPLAIN','Show the evidence or calculations and check units.');
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function activity(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
  const s=shell(pptx,info,'COLLABORATE',i,t);head(s,item.title,'LEARN BY DOING');
@@ -174,7 +215,7 @@ function activity(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numb
  ['THINK','SHARE','EXPLAIN'].forEach((word,k)=>{txt(s,String(k+1).padStart(2,'0'),8.62,2.91+k*0.84,0.73,0.34,{fontSize:18,bold:true,color:C.soft});
  txt(s,word,9.54,2.87+k*0.84,2.65,0.45,{fontSize:23,bold:true,color:C.paper});});
  strip(s,'TEAMWORK','Support claims with evidence from the lesson.');
- note(s,item.teacherScript);
+ note(s,item.teacherScript,info,'concept',i);
 }
 function vocabulary(pptx:PptxGenJS,info:DeckInfo,terms:LessonResult['vocabulary'],i:number,t:number){
  const s=shell(pptx,info,'LANGUAGE SCAFFOLD',i,t);head(s,'Key vocabulary','ENGLISH / VIETNAMESE');
@@ -183,7 +224,7 @@ function vocabulary(pptx:PptxGenJS,info:DeckInfo,terms:LessonResult['vocabulary'
  txt(s,brief(v.termEn,65),x+0.27,y+0.13,4.92,0.39,{fontSize:18.0,bold:true,color:C.deep,fit:'shrink'});
  txt(s,brief(v.termVi,100),x+0.27,y+0.58,5.18,0.35,{fontSize:15.0,color:C.ink,fit:'shrink'});});
  strip(s,'SAY IT','Use two new terms to explain the concept.',6.27);
- note(s,terms.map(v=>v.termEn+' – '+v.termVi+'. '+v.definitionEn+' Example: '+v.exampleEn).join('\n'));
+ note(s,terms.map(v=>v.termEn+' – '+v.termVi+'. '+v.definitionEn+' Example: '+v.exampleEn).join('\n'),info,'vocabulary',i);
 }
 function quiz(pptx:PptxGenJS,info:DeckInfo,q:LessonResult['quiz'][number],k:number,i:number,t:number){
  const s=shell(pptx,info,'CHECK FOR UNDERSTANDING',i,t);head(s,'Quick check '+k,'THINK / CHOOSE / EXPLAIN');
@@ -194,19 +235,19 @@ function quiz(pptx:PptxGenJS,info:DeckInfo,q:LessonResult['quiz'][number],k:numb
  txt(s,String.fromCharCode(65+j),x+0.18,y+0.33,0.49,0.17,{fontSize:12,bold:true,color:C.deep,align:'center'});
  txt(s,brief(v,178),x+0.87,y+0.12,4.65,0.66,{fontSize:16.5,fit:'shrink'});});
  eyebrow(s,'JUSTIFY YOUR ANSWER USING EVIDENCE',0.84,6.32,9.5);
- note(s,'TEACHER ONLY. Answer: '+String.fromCharCode(65+q.correctIndex)+'. '+q.explanationVi);
+ note(s,'TEACHER ONLY. Answer: '+String.fromCharCode(65+q.correctIndex)+'. '+q.explanationVi,info,'quiz',i);
 }
 function summary(pptx:PptxGenJS,info:DeckInfo,result:LessonResult,i:number,t:number){
  const s=shell(pptx,info,'CONSOLIDATE',i,t);head(s,'What have we learned?','KEY TAKEAWAYS');
  result.contentObjectives.slice(0,3).forEach((v,k)=>tile(s,0.75+k*4.02,2.56,3.76,2.87,'TAKEAWAY '+(k+1),v,k+1));
  strip(s,'EXIT TICKET','Explain one key idea in English using your own words.');
- note(s,'Review key objectives and identify misconceptions based on the approved material.');
+ note(s,'Review key objectives and identify misconceptions based on the approved material.',info,'summary',i);
 }
 function homework(pptx:PptxGenJS,info:DeckInfo,i:number,t:number){
  const s=shell(pptx,info,'CONTINUE LEARNING',i,t);head(s,'Keep exploring','REFLECT / PRACTISE');
  ['Review the core ideas','Use key terms in English','Prepare one question for the next lesson'].forEach((v,k)=>tile(s,0.75+k*4.02,2.58,3.76,2.84,'NEXT STEP',v,k+1));
  eyebrow(s,'SEE YOU IN THE NEXT LESSON',0.83,6.26,11.4);
- note(s,'Adapt homework to the source and local learning objectives.');
+ note(s,'Adapt homework to the source and local learning objectives.',info,'homework',i);
 }
 export function classifySlide(slide:ContentSlide,index:number,total:number):SlideKind{
  if(slide.slideType)return slide.slideType as SlideKind;
@@ -222,13 +263,16 @@ export function classifySlide(slide:ContentSlide,index:number,total:number):Slid
  return index%3===0?'concept':index%3===1?'process':'comparison';
 }
 export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Promise<Buffer>{
+ info={...info,classroomPhrases:result.classroomPhrases};
  const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='EDUBRIDGE';
  pptx.subject=info.subject+' · Grade '+info.grade+' · EMI/CLIL';pptx.title=info.title;
  const slideItems=result.slides.slice(0,14);
  const vocabularyGroups:LessonResult['vocabulary'][]=[];
  for(let i=0;i<Math.min(result.vocabulary.length,12);i+=6)vocabularyGroups.push(result.vocabulary.slice(i,i+6));
  const qs=result.quiz.slice(0,2);
- const total=1+1+slideItems.length+vocabularyGroups.length+qs.length+2;
+ const illustratedIndexes=slideItems.map((_,i)=>i).filter(i=>classifySlide(slideItems[i],i,slideItems.length)!=='summary').slice(0,6);
+ const total=1+1+slideItems.length+illustratedIndexes.length+vocabularyGroups.length+qs.length+2;
+ const usedIllustrations=new Set<string>();
  cover(pptx,info,result);let page=2;
  objectives(pptx,info,result,page++,total);
  slideItems.forEach((item,idx)=>{const kind=classifySlide(item,idx,slideItems.length);
@@ -240,6 +284,7 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Prom
   else if(kind==='example')example(pptx,info,item,page++,total);
   else if(kind==='activity')activity(pptx,info,item,page++,total);
   else concept(pptx,info,item,page++,total);
+  if(illustratedIndexes.includes(idx))illustration(pptx,info,item,kind,page++,total,usedIllustrations);
  });
  vocabularyGroups.forEach(v=>vocabulary(pptx,info,v,page++,total));
  qs.forEach((q,k)=>quiz(pptx,info,q,k+1,page++,total));

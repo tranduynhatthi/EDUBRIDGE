@@ -5,7 +5,7 @@
  */
 const svgHeader='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">';
 const ink='#292524',orange='#EA580C',deep='#9A3412',cream='#FFFBF7',lineColor='#FED7AA';
-function escaped(v:unknown){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&apos;'}[c]));}
+function escaped(v:unknown){const entities:Record<string,string>={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'};return String(v??'').replace(/[&<>"']/g,c=>entities[c]??c);}
 function short(v:unknown,n=120){const t=String(v??'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).trimEnd()+'…':t;}
 function textSvg(v:unknown,x:number,y:number,size=28,color=ink,weight=600,anchor='start'){
  return '<text x="'+x+'" y="'+y+'" font-family="Arial,sans-serif" font-size="'+size+'" font-weight="'+weight+'" text-anchor="'+anchor+'" fill="'+color+'">'+escaped(v)+'</text>';

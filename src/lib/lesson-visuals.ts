@@ -19,7 +19,7 @@ function framedSvg(content:string,label:string){
  +boxSvg(45,35,1110,82)+textSvg(short(label,51),80,88,35,deep,750)
  +content+textSvg('EDUBRIDGE • Conceptual diagram • Not to scale • Teacher review required',48,622,17,'#78716C',450)+'</svg>';
 }
-function brokenLines(value,max=24,lines=4){const words=short(value,190).split(' '),out=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){out.push(line);line=word;}else line=(line+' '+word).trim();}if(line)out.push(line);return out.slice(0,lines);}
+function brokenLines(value:unknown,max=24,lines=4){const words=short(value,190).split(' '),out=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){out.push(line);line=word;}else line=(line+' '+word).trim();}if(line)out.push(line);return out.slice(0,lines);}
 type VisualItem={title:string;bullets:string[];keyMessage?:string;formula?:string};
 function slideInfographic(item:VisualItem,kind:string){
  const rows=(item.bullets||[]).filter(Boolean).slice(0,4);if(!rows.length)rows.push(item.keyMessage||item.title);
@@ -52,7 +52,7 @@ function particlesSvg(){
  parts.push(textSvg('Arrangement illustration; particles are not drawn to scale.',600,565,23,'#78716C',450,'middle'));
  return framedSvg(parts.join(''),'States of matter — particle model');
 }
-function curveSvg(boyle){
+function curveSvg(boyle:boolean){
  const parts=[textSvg(boyle?'Pressure and volume (constant temperature)':'Volume and absolute temperature (constant pressure)',600,158,27,ink,600,'middle')];
  parts.push('<path d="M190 205 L190 515 L1070 515" fill="none" stroke="'+ink+'" stroke-width="5"/>');
  parts.push(textSvg(boyle?'Pressure (p)':'Volume (V)',86,205,24,ink),textSvg(boyle?'Volume (V)':'Temperature (K)',1030,558,24,ink));
@@ -63,7 +63,7 @@ function curveSvg(boyle){
 }
 function nucleusSvg(){
  const parts=['<circle cx="610" cy="365" r="158" fill="#FFF7ED" stroke="#FDBA74" stroke-width="6"/>'];
- const cells=[[567,300,orange],[636,305,deep],[527,366,deep],[605,369,orange],[677,369,deep],[557,433,orange],[631,436,deep],[601,494,orange]];
+ const cells:[number,number,string][]=[[567,300,orange],[636,305,deep],[527,366,deep],[605,369,orange],[677,369,deep],[557,433,orange],[631,436,deep],[601,494,orange]];
  for(const p of cells){parts.push(circleSvg(p[0],p[1],34,p[2]),textSvg(p[2]===orange?'+':'n',p[0],p[1]+9,29,'#FFFFFF',750,'middle'));}
  parts.push(boxSvg(52,273,263,112),circleSvg(102,322,15,orange),textSvg('Proton (+)',130,331,26));
  parts.push(boxSvg(890,374,258,112),circleSvg(940,424,15,deep),textSvg('Neutron (n)',970,432,25));

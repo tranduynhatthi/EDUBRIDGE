@@ -42,9 +42,9 @@ const cmd=[
  "if(!Buffer.isBuffer(buf)||buf.length<16000||buf[0]!==80||buf[1]!==75)throw Error('Invalid PowerPoint zip');",
  "const JSZip=(await import('jszip')).default;",
  "const zip=await JSZip.loadAsync(buf);",
- "const illustrations=Object.keys(zip.files).filter(x=>/^ppt\/media\/.*\.(svg|png)$/i.test(x));",
+ "const illustrations=Object.keys(zip.files).filter(x=>x.startsWith('ppt/media/')&&(x.endsWith('.svg')||x.endsWith('.png')));",
  "if(illustrations.length<4)throw Error('Expected at least 4 embedded educational images, got '+illustrations.length);",
- "const notes=Object.keys(zip.files).filter(x=>/^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(x));",
+ "const notes=Object.keys(zip.files).filter(x=>x.startsWith('ppt/notesSlides/notesSlide')&&x.endsWith('.xml'));",
  "const joined=(await Promise.all(notes.map(x=>zip.file(x).async('string')))).join('');",
  "if(!joined.includes('CLASSROOM ENGLISH')||!joined.includes('Please look at the diagram.'))throw Error('Missing bilingual teacher classroom notes');",
  "console.log('PASS SVG illustrations',illustrations.length,'speaker-note files',notes.length,'bytes',buf.length);"

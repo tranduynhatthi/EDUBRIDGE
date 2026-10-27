@@ -37,7 +37,11 @@ export function generateMaterialParagraphs(kind:'plan'|'worksheet'|'review',mate
   add('PHIẾU HỌC TẬP – '+m.title,'title');
   add('Môn: '+lesson.subject+' · Lớp: '+lesson.grade+' · Bài: '+lesson.title,'sub');
   add('Họ và tên: ................................................... Lớp: ............');
-  add('Hướng dẫn: '+m.instructions);
+  add('Instructions: '+m.instructions);
+  if(m.vocabulary?.length){
+   add('KEY VOCABULARY – TỪ VỰNG TRỌNG TÂM','section');
+   m.vocabulary.forEach((v,i)=>add((i+1)+'. '+v.termEn+' — '+v.termVi+' — '+v.definitionEn));
+  }
   m.tasks.forEach((t,i)=>{
    add('Nhiệm vụ '+(i+1)+'. '+t.instruction,'section');add(t.question,'question');
    if(version==='answers')add('Gợi ý đáp án: '+t.expectedAnswer,'answer');

@@ -153,3 +153,5 @@ Xem CSV để biết chính xác từng bài. PDF trang **6, 34, 56, 91** là c�
 ## Phiên bản mở rộng – hoàn chỉnh chu trình Bài 1
 
 Xem **`docs/04_BAI1_QUY_TRINH_KHEP_KIN.md`**. Chạy tiếp `supabase/04_bai1_student_cycle.sql` sau các migration 01–03. Đã bổ sung giao diện tài khoản học sinh, giáo viên giao bài bằng mã, học/quiz/lưu điểm và bảng kết quả; giáo viên có thể chỉnh sửa đáp án quiz trước khi giao. Hai bộ nội dung tham chiếu ở `sample-data/bai1_nguon_da_doi_chieu_can_hau_kiem.txt` và `sample-data/bai1_baiday_songngu_mau.json` là **dữ liệu mẫu, không tự nạp, không phải kết quả đã chạy AI**. Cần cài npm, cấu hình API, chạy SQL và kiểm thử thật trước khi sử dụng lớp học. Nếu sách PDF quét khó nhận diện, không phê duyệt bài trước khi đối chiếu từng hình/công thức.
+
+<!-- Preview build environment check 2026-10-27 -->

@@ -185,7 +185,7 @@ export default function BuilderPage(){
      <div className="warning-box"><Info size={18}/><span>AI dùng nội dung bài đã lưu trong cơ sở dữ liệu. Giáo viên phải hậu kiểm kiến thức trước khi sử dụng.</span></div>
      {error&&<p className="error" role="alert">{error}</p>}
      <button type="submit" className="primary-btn full" disabled={loading||catalogLoading||!selected}>
-      {loading?<><LoaderCircle className="rotating" size={19}/> Đang xử lý...</>:<><Sparkles size={18}/> Tạo bài dạy với Gemini</>}
+      {loading?<><LoaderCircle className="rotating" size={19}/> Đang xử lý...</>:<><Sparkles size={18}/> Tạo bài dạy với AI</>}
      </button>
      {quotaLimited&&<p role="status" className="muted" style={{marginTop:12}}>Gemini đã hết hạn mức. Bạn vẫn có thể tạo bản khung không dùng AI.</p>}
      <button type="button" className="secondary-btn full" style={{marginTop:10}} disabled={loading||catalogLoading||!selected} onClick={()=>{void createOffline();}}>

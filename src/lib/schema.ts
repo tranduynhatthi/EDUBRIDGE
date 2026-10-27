@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {isValidSubject} from '@/lib/subjects';
+import {Plan5512Schema,WorksheetSchema,ReviewSchema} from '@/lib/teaching-materials';
 
 export const CatalogRequestSchema = z.object({
   textbookLessonId: z.string().uuid(),
@@ -42,6 +43,9 @@ export const LessonResultSchema = z.object({
   })),
   quiz: z.array(z.object({questionEn: z.string(), choices: z.array(z.string()), correctIndex: z.number().int(), explanationVi: z.string()})),
   qualityWarnings: z.array(z.string()),
+  plan5512:Plan5512Schema.optional(),
+  worksheet:WorksheetSchema.optional(),
+  reviewAssessment:ReviewSchema.optional(),
 });
 export type LessonResult = z.infer<typeof LessonResultSchema>;
 

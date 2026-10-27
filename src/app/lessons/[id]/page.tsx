@@ -51,7 +51,7 @@ export default function LessonDetail(){
  </select></label>
  <label className="field">Thông điệp chính (tối đa 180 kí tự)<input maxLength={180} value={slide.keyMessage||''} onChange={e=>editSlide(i,'keyMessage',e.target.value)} placeholder="Một ý khoa học cốt lõi"/></label>
  </div>
- <p className="muted" style={{margin:'6px 0 15px'}}>Màu cam–trắng, 16:9; hình khối và sơ đồ có thể sửa trong PowerPoint. Gợi ý hình ảnh chưa tự chèn ảnh từ Internet.</p>
+ <p className="muted" style={{margin:'6px 0 15px'}}>Màu cam–trắng, 16:9; PowerPoint tự nhúng hình minh họa SVG hoặc infographic từ nội dung bài học (không lấy ảnh Internet). Các hình cần giáo viên kiểm tra tính khoa học trước khi dạy.</p>
  <label className="field">Tiêu đề (chỉnh sửa được)<input value={slide.title} onChange={e=>editSlide(i,'title',e.target.value)}/></label><label className="field">Ý chính (mỗi dòng một ý)<textarea rows={Math.max(4,slide.bullets.length+1)} value={slide.bullets.join('\n')} onChange={e=>editBullet(i,e.target.value)}/></label><label className="field">Nhiệm vụ học sinh<input value={slide.studentTask||''} onChange={e=>editSlide(i,'studentTask',e.target.value)} placeholder="Predict / Discuss / Explain..."/></label>
  <label className="field">Công thức từ nguồn (nếu có, giữ nguyên ký hiệu)<input value={slide.formula||''} onChange={e=>editSlide(i,'formula',e.target.value)} placeholder="Ví dụ: pV = nRT"/></label>
  <label className="field">Gợi ý hình minh họa / sơ đồ (Slide Studio tự thêm sơ đồ phù hợp)<input value={slide.visualSuggestion||''} onChange={e=>editSlide(i,'visualSuggestion',e.target.value)} placeholder="Mô tả sơ đồ phù hợp"/></label>

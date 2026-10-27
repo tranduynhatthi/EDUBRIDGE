@@ -12,9 +12,9 @@ const kinds=[
 ] as const;
 const fieldMap={plan:'plan5512',worksheet:'worksheet',review:'reviewAssessment'} as const;
 type Material=Plan5512|Worksheet|Review;
-type Props={lessonId:string;result:LessonResult;unsaved:boolean;onGenerated:(kind:MaterialType,material:Material)=>void};
-export default function TeachingMaterialsPanel({lessonId,result,unsaved,onGenerated}:Props){
- const [selected,setSelected]=useState<MaterialType>('plan');
+type Props={section:'lesson'|'review';lessonId:string;result:LessonResult;unsaved:boolean;onGenerated:(kind:MaterialType,material:Material)=>void};
+export default function TeachingMaterialsPanel({section,lessonId,result,unsaved,onGenerated}:Props){
+ const [selected,setSelected]=useState<MaterialType>(section==='review'?'review':'plan');
  const [mode,setMode]=useState<'standard'|'advanced'>('standard');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
  const [answers,setAnswers]=useState(false);
@@ -44,10 +44,10 @@ export default function TeachingMaterialsPanel({lessonId,result,unsaved,onGenera
  }
  return <section className="white-panel" style={{padding:24}}>
   <div className="eyebrow">EDUBRIDGE / TEACHING MATERIALS</div>
-  <h2>Giáo án, phiếu học tập và ôn tập</h2>
+  <h2>{section==='review'?'Câu hỏi ôn tập sau bài học':'Giáo án và phiếu học tập'}</h2>
   <p className="muted">Tài liệu được tạo từ nội dung bài học trong cơ sở dữ liệu. Mỗi lần bấm tạo sẽ dùng hạn mức Gemini; không tự động gọi AI hàng loạt.</p>
   <div className="form-grid" style={{margin:'14px 0'}}>
-   {kinds.map(({kind,title,caption})=><button type="button" key={kind} className={selected===kind?'primary-btn':'secondary-btn'} onClick={()=>{setSelected(kind);setMessage('');setError('');setAnswers(false);}} style={{height:'auto',minHeight:78,textAlign:'left',whiteSpace:'normal'}}>
+   {kinds.filter(item=>section==='review'?item.kind==='review':item.kind!=='review').map(({kind,title,caption})=><button type="button" key={kind} className={selected===kind?'primary-btn':'secondary-btn'} onClick={()=>{setSelected(kind);setMessage('');setError('');setAnswers(false);}} style={{height:'auto',minHeight:78,textAlign:'left',whiteSpace:'normal'}}>
     {kind==='plan'?<BookOpenCheck size={18}/>:kind==='worksheet'?<FileText size={18}/>:<ClipboardList size={18}/>}
     <span><strong>{title}</strong><small style={{display:'block',fontSize:12,opacity:.85,marginTop:4}}>{caption}</small></span>
    </button>)}
@@ -92,7 +92,7 @@ function PlanPreview({plan}:{plan:Plan5512}){
  </div>;
 }
 function WorksheetPreview({sheet,showAnswers}:{sheet:Worksheet;showAnswers:boolean}){
- return <div><h3>{sheet.title}</h3><p>{sheet.instructions}</p>{sheet.tasks.map((t,i)=><section key={i} style={{marginBottom:19}}>
+ return <div><h3>{sheet.title}</h3><p>{sheet.instructions}</p>{(sheet.vocabulary||[]).length>0&&<div><h4>Key vocabulary – Từ vựng trọng tâm</h4><table><thead><tr><th>English</th><th>Tiếng Việt</th><th>Definition in English</th></tr></thead><tbody>{sheet.vocabulary.map((v,i)=><tr key={i}><td>{v.termEn}</td><td>{v.termVi}</td><td>{v.definitionEn}</td></tr>)}</tbody></table></div>}{sheet.tasks.map((t,i)=><section key={i} style={{marginBottom:19}}>
   <h4>Nhiệm vụ {i+1}. {t.instruction}</h4><p>{t.question}</p>{showAnswers&&<p style={{color:'#166534'}}><b>Gợi ý đáp án:</b> {t.expectedAnswer}</p>}
  </section>)}</div>;
 }

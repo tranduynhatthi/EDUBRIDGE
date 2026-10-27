@@ -1,6 +1,7 @@
 import PptxGenJS from 'pptxgenjs';
 import type {LessonResult} from '@/lib/schema';
 import {makeTeachingVisual} from './lesson-visuals.ts';
+import {synthesizeEnglishPronunciation} from './pronunciation-audio.ts';
 
 export type SlideKind='cover'|'objectives'|'warmup'|'concept'|'process'|'comparison'|'diagram'|'formula'|'example'|'activity'|'quiz'|'summary'|'homework';
 export type DeckInfo={title:string;subject:string;grade:string;level?:string;classroomPhrases?:LessonResult['classroomPhrases']};
@@ -217,14 +218,36 @@ function activity(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numb
  strip(s,'TEAMWORK','Support claims with evidence from the lesson.');
  note(s,item.teacherScript,info,'concept',i);
 }
-function vocabulary(pptx:PptxGenJS,info:DeckInfo,terms:LessonResult['vocabulary'],i:number,t:number){
- const s=shell(pptx,info,'LANGUAGE SCAFFOLD',i,t);head(s,'Key vocabulary','ENGLISH / VIETNAMESE');
- terms.slice(0,6).forEach((v,k)=>{const x=0.74+(k%2)*6.07,y=2.30+Math.floor(k/2)*1.26;
- rect(s,x,y,5.77,1.10,C.paper,true,C.line);rect(s,x,y,0.09,1.10,C.orange);
- txt(s,brief(v.termEn,65),x+0.27,y+0.13,4.92,0.39,{fontSize:18.0,bold:true,color:C.deep,fit:'shrink'});
- txt(s,brief(v.termVi,100),x+0.27,y+0.58,5.18,0.35,{fontSize:15.0,color:C.ink,fit:'shrink'});});
- strip(s,'SAY IT','Use two new terms to explain the concept.',6.27);
- note(s,terms.map(v=>v.termEn+' – '+v.termVi+'. '+v.definitionEn+' Example: '+v.exampleEn).join('\n'),info,'vocabulary',i);
+function vocabulary(pptx:PptxGenJS,info:DeckInfo,terms:LessonResult['vocabulary'],i:number,t:number,audio?:Buffer|null){
+ const s=shell(pptx,info,'VOCABULARY / LISTEN & REPEAT',i,t);head(s,'Learn the language of science','HEAR / SAY / UNDERSTAND');
+ terms.slice(0,6).forEach((v,k)=>{const x=0.74+(k%2)*6.07,y=2.25+Math.floor(k/2)*1.22;
+  rect(s,x,y,5.77,1.12,C.paper,true,C.line);rect(s,x,y,0.09,1.12,C.orange);
+  txt(s,brief(v.termEn,60),x+0.25,y+0.09,4.95,0.32,{fontSize:18,bold:true,color:C.deep,fit:'shrink'});
+  txt(s,brief(v.termVi,65),x+0.25,y+0.46,5.02,0.25,{fontSize:12.6,color:C.ink,fit:'shrink'});
+  txt(s,brief(v.definitionEn,125),x+0.25,y+0.75,5.11,0.26,{fontSize:11.3,color:C.muted,fit:'shrink'});
+ });
+ if(audio){
+  s.addMedia({type:'audio',data:'audio/wav;base64,'+audio.toString('base64'),extn:'wav',x:10.65,y:1.40,w:1.14,h:0.60});
+  eyebrow(s,'CLICK AUDIO ▶',9.12,1.73,1.75,C.orange);
+ }else{
+  txt(s,'AUDIO UNAVAILABLE – PRACTISE ON EDUBRIDGE WEB',8.10,1.87,4.37,0.22,{fontSize:10.2,bold:true,color:C.muted,align:'right'});
+ }
+ strip(s,'SPEAK','Listen → Repeat → Explain the meaning with a partner.',6.20);
+ note(s,'Say each English term slowly and let students repeat twice. Pause for students to explain the meaning. '+
+   (audio?'Click the embedded audio object to play the model voice offline.':'Audio could not be embedded in this export; use the web pronunciation buttons.')+
+   '\n'+terms.map(v=>v.termEn+' – '+v.termVi+'. '+v.definitionEn+' Example: '+v.exampleEn).join('\n'),info,'vocabulary',i);
+}
+function vocabularyPractice(pptx:PptxGenJS,info:DeckInfo,terms:LessonResult['vocabulary'],i:number,t:number){
+ const s=shell(pptx,info,'VOCABULARY PRACTICE',i,t);head(s,'Use the new science words','PAIR WORK / SPEAKING');
+ const words=terms.slice(0,6);
+ rect(s,0.74,2.27,11.84,1.01,C.soft,true);
+ txt(s,'WORD BANK  •  '+brief(words.map(v=>v.termEn).join('  ·  '),180),1.02,2.48,11.25,0.54,{fontSize:18,bold:true,color:C.deep,fit:'shrink'});
+ tile(s,0.74,3.53,3.78,2.20,'MATCH','Match each English term with its scientific meaning.',1);
+ tile(s,4.77,3.53,3.78,2.20,'SAY','Choose two new words. Say each word, then use it in a sentence.',2);
+ tile(s,8.80,3.53,3.78,2.20,'EXPLAIN','With a partner, explain a science concept using two new terms.',3);
+ strip(s,'SENTENCE','“I can explain … because …”  ·  “The term … means …”',6.12);
+ note(s,'Read the words aloud first, ask students to repeat, then let pairs practise. Check pronunciation and physics meaning. '
+  +words.map(v=>v.termEn+': '+v.definitionEn+' Example: '+v.exampleEn).join('\n'),info,'vocabulary',i);
 }
 function quiz(pptx:PptxGenJS,info:DeckInfo,q:LessonResult['quiz'][number],k:number,i:number,t:number){
  const s=shell(pptx,info,'CHECK FOR UNDERSTANDING',i,t);head(s,'Quick check '+k,'THINK / CHOOSE / EXPLAIN');
@@ -267,7 +290,7 @@ export function quizAfterSlideIndex(quizIndex:number,slideCount:number,quizCount
  if(slideCount<=0)return -1;
  return Math.min(slideCount-1,Math.max(0,Math.ceil((quizIndex+1)*slideCount/(quizCount+1))-1));
 }
-export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Promise<Buffer>{
+export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo,options?:{pronunciationGenerator?:(words:string)=>Promise<Buffer|null>}):Promise<Buffer>{
  info={...info,classroomPhrases:result.classroomPhrases};
  const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='EDUBRIDGE';
  pptx.subject=info.subject+' · Grade '+info.grade+' · EMI/CLIL';pptx.title=info.title;
@@ -276,10 +299,14 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Prom
  for(let i=0;i<Math.min(result.vocabulary.length,12);i+=6)vocabularyGroups.push(result.vocabulary.slice(i,i+6));
  const qs=result.quiz.slice(0,30);
  const illustratedIndexes=slideItems.map((_,i)=>i).filter(i=>classifySlide(slideItems[i],i,slideItems.length)!=='summary').slice(0,6);
- const total=1+1+slideItems.length+illustratedIndexes.length+vocabularyGroups.length+qs.length+2;
+ const total=1+1+slideItems.length+illustratedIndexes.length+vocabularyGroups.length+(vocabularyGroups.length?1:0)+qs.length+2;
+ const generateAudio=options?.pronunciationGenerator??synthesizeEnglishPronunciation;
+ const vocabularyAudio=await Promise.all(vocabularyGroups.map(terms=>generateAudio(terms.map(x=>x.termEn).join('. '))));
  const usedIllustrations=new Set<string>();
  cover(pptx,info,result);let page=2;
  objectives(pptx,info,result,page++,total);
+ vocabularyGroups.forEach((v,k)=>vocabulary(pptx,info,v,page++,total,vocabularyAudio[k]));
+ if(vocabularyGroups.length)vocabularyPractice(pptx,info,vocabularyGroups[0],page++,total);
  slideItems.forEach((item,idx)=>{const kind=classifySlide(item,idx,slideItems.length);
   if(kind==='warmup')warmup(pptx,info,item,page++,total);
   else if(kind==='process')process(pptx,info,item,page++,total);
@@ -294,7 +321,6 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Prom
   qs.forEach((q,k)=>{if(quizAfterSlideIndex(k,slideItems.length,qs.length)===idx)quiz(pptx,info,q,k+1,page++,total);});
  });
  if(slideItems.length===0)qs.forEach((q,k)=>quiz(pptx,info,q,k+1,page++,total));
- vocabularyGroups.forEach(v=>vocabulary(pptx,info,v,page++,total));
  summary(pptx,info,result,page++,total);homework(pptx,info,page++,total);
  const out=await pptx.write({outputType:'nodebuffer'});
  return Buffer.isBuffer(out)?out:Buffer.from(out as ArrayBuffer);

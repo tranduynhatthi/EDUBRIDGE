@@ -8,6 +8,9 @@ assert(engine.includes("function comparison("),'Comparison renderer missing');
 assert(engine.includes("function warmup("),'Warmup renderer missing');
 assert(engine.includes("function activity("),'Activity renderer missing');
 assert(engine.includes("function quiz("),'Quiz renderer missing');
+assert(engine.includes('function vocabularyPractice('),'Missing vocabulary lesson exercise');
+assert(engine.includes('s.addMedia('),'Missing PowerPoint pronunciation audio');
+assert(read('src/components/PronunciationPractice.tsx').includes('SpeechSynthesisUtterance'),'Browser speech playback missing');
 assert(engine.includes('quizAfterSlideIndex(k,slideItems.length,qs.length)'),'Quiz checkpoints must be placed among lesson slides');
 assert(!engine.includes('result.quiz.slice(0,2)'),'Do not truncate exported quiz questions');
 assert(engine.includes("s.addNotes("),'Teacher scripts must be in speaker notes');
@@ -41,11 +44,14 @@ qualityWarnings:['Check source']
 const cmd=[
  "const m=await import('file://'+process.argv[1]);",
  "const data=JSON.parse(process.argv[2]);",
+ "const pcm=Buffer.alloc(2400);const header=Buffer.alloc(44);header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(1,22);header.writeUInt32LE(24000,24);header.writeUInt32LE(48000,28);header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);header.write('data',36);header.writeUInt32LE(pcm.length,40);const wav=Buffer.concat([header,pcm]);",
  "for(let i=0;i<data.slides.length;i++){if(!m.classifySlide(data.slides[i],i,data.slides.length))throw Error('Missing slide kind')}",
- "const buf=await m.buildBeautifulDeck(data,{title:'States of Matter',subject:'Vật lí',grade:'12'});",
+ "const buf=await m.buildBeautifulDeck(data,{title:'States of Matter',subject:'Vật lí',grade:'12'},{pronunciationGenerator:async()=>wav});",
  "if(!Buffer.isBuffer(buf)||buf.length<16000||buf[0]!==80||buf[1]!==75)throw Error('Invalid PowerPoint zip');",
  "const JSZip=(await import('jszip')).default;",
  "const zip=await JSZip.loadAsync(buf);",
+ "const wavs=Object.keys(zip.files).filter(x=>x.startsWith('ppt/media/')&&x.endsWith('.wav'));",
+ "if(!wavs.length)throw Error('Vocabulary audio is not embedded in PPTX');",
  "const illustrations=Object.keys(zip.files).filter(x=>x.startsWith('ppt/media/')&&(x.endsWith('.svg')||x.endsWith('.png')));",
  "if(illustrations.length<4)throw Error('Expected at least 4 embedded educational images, got '+illustrations.length);",
  "const slideXml=await Promise.all(Object.keys(zip.files).filter(x=>x.startsWith('ppt/slides/slide')&&x.endsWith('.xml')).map(x=>zip.file(x).async('string')));",

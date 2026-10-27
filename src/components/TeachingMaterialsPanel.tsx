@@ -92,7 +92,7 @@ function PlanPreview({plan}:{plan:Plan5512}){
  </div>;
 }
 function WorksheetPreview({sheet,showAnswers}:{sheet:Worksheet;showAnswers:boolean}){
- return <div><h3>{sheet.title}</h3><p>{sheet.instructions}</p>{(sheet.vocabulary||[]).length>0&&<div><h4>Key vocabulary – Từ vựng trọng tâm</h4><table><thead><tr><th>English</th><th>Tiếng Việt</th><th>Definition in English</th></tr></thead><tbody>{sheet.vocabulary.map((v,i)=><tr key={i}><td>{v.termEn}</td><td>{v.termVi}</td><td>{v.definitionEn}</td></tr>)}</tbody></table></div>{sheet.tasks.map((t,i)=><section key={i} style={{marginBottom:19}}>
+ return <div><h3>{sheet.title}</h3><p>{sheet.instructions}</p>{(sheet.vocabulary||[]).length>0&&<div><h4>Key vocabulary – Từ vựng trọng tâm</h4><table><thead><tr><th>English</th><th>Tiếng Việt</th><th>Definition in English</th></tr></thead><tbody>{sheet.vocabulary.map((v,i)=><tr key={i}><td>{v.termEn}</td><td>{v.termVi}</td><td>{v.definitionEn}</td></tr>)}</tbody></table></div>}{sheet.tasks.map((t,i)=><section key={i} style={{marginBottom:19}}>
   <h4>Nhiệm vụ {i+1}. {t.instruction}</h4><p>{t.question}</p>{showAnswers&&<p style={{color:'#166534'}}><b>Gợi ý đáp án:</b> {t.expectedAnswer}</p>}
  </section>)}</div>;
 }

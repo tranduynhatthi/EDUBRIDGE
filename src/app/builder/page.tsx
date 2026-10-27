@@ -179,8 +179,8 @@ export default function BuilderPage(){
      <ul className="feature-list">
       <li><BookOpen size={16}/> Mục tiêu kiến thức và ngôn ngữ</li>
       <li><FileText size={16}/> Thuật ngữ Anh–Việt</li>
-      <li><FileText size={16}/> Slide khoa học và lời giảng</li>
-      <li><FileText size={16}/> Câu hỏi và hoạt động học tập</li>
+      <li><FileText size={16}/> PowerPoint có hình minh họa và lời thoại trong Notes</li>
+      <li><FileText size={16}/> Giáo án 5512 · Phiếu học tập · Đề ôn tập 10–2–3</li>
      </ul>
      <div className="warning-box"><Info size={18}/><span>AI dùng nội dung bài đã lưu trong cơ sở dữ liệu. Giáo viên phải hậu kiểm kiến thức trước khi sử dụng.</span></div>
      {error&&<p className="error" role="alert">{error}</p>}

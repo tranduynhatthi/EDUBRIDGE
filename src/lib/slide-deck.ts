@@ -262,6 +262,11 @@ export function classifySlide(slide:ContentSlide,index:number,total:number):Slid
  if(index===total-1)return 'concept';
  return index%3===0?'concept':index%3===1?'process':'comparison';
 }
+// A checkpoint follows the nearest lesson slide; all saved quiz questions stay in the deck.
+export function quizAfterSlideIndex(quizIndex:number,slideCount:number,quizCount:number):number{
+ if(slideCount<=0)return -1;
+ return Math.min(slideCount-1,Math.max(0,Math.ceil((quizIndex+1)*slideCount/(quizCount+1))-1));
+}
 export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Promise<Buffer>{
  info={...info,classroomPhrases:result.classroomPhrases};
  const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='EDUBRIDGE';
@@ -269,7 +274,7 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Prom
  const slideItems=result.slides.slice(0,14);
  const vocabularyGroups:LessonResult['vocabulary'][]=[];
  for(let i=0;i<Math.min(result.vocabulary.length,12);i+=6)vocabularyGroups.push(result.vocabulary.slice(i,i+6));
- const qs=result.quiz.slice(0,2);
+ const qs=result.quiz.slice(0,30);
  const illustratedIndexes=slideItems.map((_,i)=>i).filter(i=>classifySlide(slideItems[i],i,slideItems.length)!=='summary').slice(0,6);
  const total=1+1+slideItems.length+illustratedIndexes.length+vocabularyGroups.length+qs.length+2;
  const usedIllustrations=new Set<string>();
@@ -285,9 +290,11 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo):Prom
   else if(kind==='activity')activity(pptx,info,item,page++,total);
   else concept(pptx,info,item,page++,total);
   if(illustratedIndexes.includes(idx))illustration(pptx,info,item,kind,page++,total,usedIllustrations);
+  // Embed quiz checkpoints within the teaching sequence, not as a separate section.
+  qs.forEach((q,k)=>{if(quizAfterSlideIndex(k,slideItems.length,qs.length)===idx)quiz(pptx,info,q,k+1,page++,total);});
  });
+ if(slideItems.length===0)qs.forEach((q,k)=>quiz(pptx,info,q,k+1,page++,total));
  vocabularyGroups.forEach(v=>vocabulary(pptx,info,v,page++,total));
- qs.forEach((q,k)=>quiz(pptx,info,q,k+1,page++,total));
  summary(pptx,info,result,page++,total);homework(pptx,info,page++,total);
  const out=await pptx.write({outputType:'nodebuffer'});
  return Buffer.isBuffer(out)?out:Buffer.from(out as ArrayBuffer);

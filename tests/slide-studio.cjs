@@ -8,6 +8,8 @@ assert(engine.includes("function comparison("),'Comparison renderer missing');
 assert(engine.includes("function warmup("),'Warmup renderer missing');
 assert(engine.includes("function activity("),'Activity renderer missing');
 assert(engine.includes("function quiz("),'Quiz renderer missing');
+assert(engine.includes('quizAfterSlideIndex(k,slideItems.length,qs.length)'),'Quiz checkpoints must be placed among lesson slides');
+assert(!engine.includes('result.quiz.slice(0,2)'),'Do not truncate exported quiz questions');
 assert(engine.includes("s.addNotes("),'Teacher scripts must be in speaker notes');
 assert(engine.includes('CLASSROOM ENGLISH / CÂU GIAO TIẾP GỢI Ý'),'Notes must include classroom phrases');
 assert(engine.includes('function illustration('),'Must render teaching images');
@@ -15,6 +17,8 @@ assert(engine.includes('s.addImage({data:image.data'),'SVG images must be embedd
 assert(engine.includes("pptx.layout='LAYOUT_WIDE'"),'16:9 required');
 assert(api.includes('buildBeautifulDeck('),'Export API must use visual engine');
 assert(ui.includes('EDUBRIDGE SLIDE STUDIO'),'Teacher must edit slide metadata');
+assert(ui.includes('quizAfterSlideIndex(j,result.slides.length,result.quiz.length)'),'Quiz editing should be in Slide');
+assert(!ui.includes("label:'Quiz tương tác'"),'Separate Quiz tab should be removed');
 assert(schema.includes("slideType:z.enum("),'Structured slide types must be stored');
 const fake={
 lessonTitleEn:'States of Matter',contentObjectives:['Recognise particle arrangement','Compare three states','Explain transitions'],
@@ -31,7 +35,7 @@ slides:[
  {slideType:'activity',title:'Pair work',bullets:['Discuss'],teacherScript:'Group discussion'},
  {slideType:'concept',title:'Review',bullets:['Summary concept'],teacherScript:'Wrap up'}
 ],
-quiz:[{questionEn:'Which state flows?',choices:['Solid','Liquid','Both','Neither'],correctIndex:1,explanationVi:'Liquid flows.'}],
+quiz:Array.from({length:5},(_,i)=>({questionEn:'Which state flows? Number '+i,choices:['Solid','Liquid','Both','Neither'],correctIndex:1,explanationVi:'Liquid flows.'})),
 qualityWarnings:['Check source']
 };
 const cmd=[
@@ -44,7 +48,10 @@ const cmd=[
  "const zip=await JSZip.loadAsync(buf);",
  "const illustrations=Object.keys(zip.files).filter(x=>x.startsWith('ppt/media/')&&(x.endsWith('.svg')||x.endsWith('.png')));",
  "if(illustrations.length<4)throw Error('Expected at least 4 embedded educational images, got '+illustrations.length);",
- "const notes=Object.keys(zip.files).filter(x=>x.startsWith('ppt/notesSlides/notesSlide')&&x.endsWith('.xml'));",
+ "const slideXml=await Promise.all(Object.keys(zip.files).filter(x=>x.startsWith('ppt/slides/slide')&&x.endsWith('.xml')).map(x=>zip.file(x).async('string')));",
+"for(let i=0;i<5;i++){if(slideXml.filter(x=>x.includes('Which state flows? Number '+i)).length!==1)throw Error('Missing or repeated PPT quiz question '+i)}",
+"if(slideXml.some(x=>x.includes('Liquid flows.')))throw Error('Teacher answer leaked into PowerPoint slide');",
+"const notes=Object.keys(zip.files).filter(x=>x.startsWith('ppt/notesSlides/notesSlide')&&x.endsWith('.xml'));",
  "const joined=(await Promise.all(notes.map(x=>zip.file(x).async('string')))).join('');",
  "if(!joined.includes('CLASSROOM ENGLISH')||!joined.includes('Please look at the diagram.'))throw Error('Missing bilingual teacher classroom notes');",
  "console.log('PASS SVG illustrations',illustrations.length,'speaker-note files',notes.length,'bytes',buf.length);"

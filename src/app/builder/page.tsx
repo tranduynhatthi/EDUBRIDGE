@@ -22,6 +22,7 @@ export default function BuilderPage(){
  const [books,setBooks]=useState<Book[]>([]);
  const [choiceKey,setChoiceKey]=useState('');
  const [level,setLevel]=useState<'A2'|'B1'|'B2'>('B1');
+ const [durationMinutes,setDurationMinutes]=useState<45|90>(45);
  const [notes,setNotes]=useState('Sử dụng tiếng Anh dễ hiểu, có câu hỏi tương tác, giữ nguyên thuật ngữ và kiến thức của nguồn.');
  const [generationMode,setGenerationMode]=useState<'standard'|'advanced'>('standard');
  const [loading,setLoading]=useState(false),[catalogLoading,setCatalogLoading]=useState(true),[error,setError]=useState(''),[quotaLimited,setQuotaLimited]=useState(false);
@@ -72,8 +73,8 @@ export default function BuilderPage(){
   try{
    // Only send a database lesson ID. Original source is fetched and verified by the server.
    const payload=selected.kind==='ready'
-    ?{readyLessonId:selected.id,languageLevel:level,teacherNotes:notes,generationMode}
-    :{textbookLessonId:selected.id,languageLevel:level,teacherNotes:notes,generationMode};
+    ?{readyLessonId:selected.id,languageLevel:level,teacherNotes:notes,generationMode,durationMinutes}
+    :{textbookLessonId:selected.id,languageLevel:level,teacherNotes:notes,generationMode,durationMinutes};
    const response=await authorizedFetch('/api/ai/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const raw=await response.text();
    let json:{id?:string;error?:string;code?:string};
@@ -107,6 +108,7 @@ export default function BuilderPage(){
    }
    if(source.length<250||source.length>25000)throw new Error('Nội dung bài chưa đủ điều kiện để tạo bản khung.');
    const generated=makeOfflineLesson(selected.title,source);
+   generated.durationMinutes=durationMinutes;
    const saved=await api.from('lessons').insert({
     teacher_id:user.id,textbook_lesson_id:ref,title:selected.title,subject,grade,language_level:level,
     source_text:source,source_filename:filename.slice(0,160),teacher_notes:notes,
@@ -166,6 +168,9 @@ export default function BuilderPage(){
        <option value="standard">Tiêu chuẩn · Gemini 3.5 Flash-Lite</option>
        <option value="advanced">Chuyên sâu · Gemini 3.8 Flash</option>
       </select></label>
+      <label className="field">Thời lượng bài dạy<select value={durationMinutes} onChange={e=>setDurationMinutes(Number(e.target.value) as 45|90)}>
+       <option value={45}>45 phút – 1 tiết</option><option value={90}>90 phút – 2 tiết</option>
+      </select></label>
      </div>
      <label className="field" style={{marginTop:18}}>Yêu cầu bổ sung
       <textarea rows={4} maxLength={1500} value={notes} onChange={e=>setNotes(e.target.value)}/>
@@ -179,7 +184,7 @@ export default function BuilderPage(){
      <ul className="feature-list">
       <li><BookOpen size={16}/> Mục tiêu kiến thức và ngôn ngữ</li>
       <li><FileText size={16}/> Thuật ngữ Anh–Việt</li>
-      <li><FileText size={16}/> PowerPoint có hình minh họa và lời thoại trong Notes</li>
+      <li><FileText size={16}/> PPT EMI/CLIL theo môn: hình minh họa, IPA và Notes từng slide</li>
       <li><FileText size={16}/> Giáo án 5512 · Phiếu học tập · Đề ôn tập 10–2–3</li>
      </ul>
      <div className="warning-box"><Info size={18}/><span>AI dùng nội dung bài đã lưu trong cơ sở dữ liệu. Giáo viên phải hậu kiểm kiến thức trước khi sử dụng.</span></div>

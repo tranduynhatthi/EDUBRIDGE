@@ -9,7 +9,7 @@ export type DeckInfo={title:string;subject:string;grade:string;level?:string;cla
 type Slide=ReturnType<PptxGenJS['addSlide']>;
 type ContentSlide=LessonResult['slides'][number];
 const W=13.333,H=7.5;
-const C={orange:'EA580C',deep:'9A3412',coral:'F97316',soft:'FFEDD5',cream:'FFFBF7',paper:'FFFFFF',line:'FED7AA',dark:'292524',ink:'44403C',muted:'78716C',amber:'FDBA74'};
+const C={orange:'EA580C',deep:'15304B',coral:'F97316',soft:'FFEDD5',cream:'FFFBF7',paper:'FFFFFF',line:'FED7AA',dark:'182B3A',ink:'334155',muted:'64748B',amber:'FDBA74'};
 const font='Aptos',display='Aptos Display';
 function txt(s:Slide,value:string,x:number,y:number,w:number,h:number,extra:Record<string,unknown>={}){
  s.addText(value,{x,y,w,h,fontFace:font,fontSize:20,color:C.dark,margin:0,breakLine:false,...extra} as Parameters<Slide['addText']>[1]);
@@ -37,7 +37,7 @@ function bullets(s:Slide,items:string[],x:number,y:number,w:number,gap=0.88){
 function shell(pptx:PptxGenJS,info:DeckInfo,section:string,index:number,total:number){
  const s=pptx.addSlide();s.background={color:C.cream};
  rect(s,0,0,W,0.095,C.orange);
- eyebrow(s,'EDUBRIDGE   /   SLIDE STUDIO',0.72,0.35,5.9);
+ eyebrow(s,'EDUBRIDGE / EMI-CLIL V3.2',0.72,0.35,5.9);
  txt(s,info.subject+'  ·  GRADE '+info.grade,9.05,0.34,3.54,0.24,{fontSize:10.8,color:C.muted,align:'right'});
  divider(s,0.73,6.98,11.87);
  eyebrow(s,section,0.74,7.11,8,C.muted);
@@ -99,6 +99,11 @@ function tile(s:Slide,x:number,y:number,w:number,h:number,title:string,body:stri
  txt(s,brief(body,190),x+0.31,y+0.97,w-0.63,h-1.21,{fontSize:18,fit:'shrink',valign:'top'});
 }
 
+function visualPanel(s:Slide,info:DeckInfo,item:ContentSlide,kind:SlideKind,x:number,y:number,w:number,h:number){
+ const visual=makeTeachingVisual({subject:info.subject,lessonTitle:'',item,kind,used:new Set<string>()});
+ rect(s,x,y,w,h,C.paper,true,C.line);
+ s.addImage({data:visual.data,x:x+0.08,y:y+0.07,w:w-0.16,h:h-0.14});
+}
 function illustration(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,kind:SlideKind,i:number,total:number,used:Set<string>){
  const s=shell(pptx,info,'SUBJECT VISUAL',i,total);
  head(s,'Visual explanation: '+item.title,'OBSERVE / EXPLAIN / DISCUSS');
@@ -142,10 +147,7 @@ function warmup(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number
  rect(s,0.74,2.41,7.35,3.26,C.orange,true);
  eyebrow(s,'THE BIG QUESTION',1.09,2.82,6.4,C.paper);
  txt(s,brief(item.keyMessage||item.bullets[0]||item.title,230),1.07,3.32,6.64,1.88,{fontFace:display,fontSize:31,bold:true,color:C.paper,fit:'shrink',valign:'top'});
- rect(s,8.37,2.41,4.20,3.26,C.paper,true,C.line);
- ['PREDICT','DISCUSS','EXPLAIN'].forEach((a,k)=>{ellipse(s,8.74,2.87+k*0.84,0.46,k===1?C.orange:C.soft);
- txt(s,String(k+1),8.74,2.99+k*0.84,0.46,0.16,{fontSize:11,bold:true,align:'center',color:k===1?C.paper:C.deep});
- txt(s,a,9.46,2.90+k*0.84,2.74,0.37,{fontSize:20,bold:true});});
+ visualPanel(s,info,item,'warmup',8.37,2.41,4.20,3.26);
  strip(s,'PAIR TALK',item.studentTask||'Share your prediction with a partner.');
  note(s,speakerNotes(item),info,'concept',i);
 }
@@ -155,8 +157,8 @@ function concept(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  eyebrow(s,'BIG IDEA',1.07,2.79,4.35,C.amber);
  txt(s,brief(item.keyMessage||item.bullets[0]||item.title,220),1.08,3.30,4.38,1.76,{fontFace:display,fontSize:28,bold:true,color:C.paper,fit:'shrink'});
  txt(s,'OBSERVE  ·  CONNECT  ·  EXPLAIN',1.08,5.38,4.37,0.22,{fontSize:11,bold:true,color:C.amber});
- bullets(s,item.bullets,6.30,2.65,5.9,0.90);
- strip(s,'CHECKPOINT','Explain one key idea in your own words.');
+ visualPanel(s,info,item,'concept',6.28,2.41,6.30,3.47);
+ strip(s,'SPEAK & EXPLAIN',item.studentTask||'Explain this idea in English with evidence.');
  note(s,speakerNotes(item),info,'concept',i);
 }
 function process(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
@@ -171,7 +173,7 @@ function process(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
   txt(s,brief(v,180),x+0.29,4.02,w-0.55,1.26,{fontSize:18,fit:'shrink',valign:'top'});
   if(k<n-1)txt(s,'→',x+w-0.12,3.53,0.44,0.37,{fontSize:22,bold:true,color:C.orange});
  });
- strip(s,'REFLECT','Which step needs the strongest evidence?');
+ strip(s,'PROCESS & EXPLAIN',item.studentTask||'Explain the steps and justify the order.');
  note(s,speakerNotes(item),info,'concept',i);
 }
 function comparison(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
@@ -179,7 +181,7 @@ function comparison(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:nu
  const values=item.bullets.filter(Boolean).slice(0,3);if(!values.length)values.push(item.keyMessage||item.title);
  const gap=0.23,w=(11.84-(values.length-1)*gap)/values.length;
  values.forEach((v,k)=>tile(s,0.75+k*(w+gap),2.45,w,3.24,'FEATURE '+(k+1),v,k+1));
- strip(s,'QUESTION','What is similar and what is different?');
+ strip(s,'COMPARE',item.studentTask||'Explain one similarity and one difference.');
  note(s,speakerNotes(item),info,'concept',i);
 }
 function diagram(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
@@ -197,7 +199,7 @@ function formula(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  const s=shell(pptx,info,'QUANTITATIVE REASONING',i,t);head(s,item.title,'FORMULA + SYMBOLS');
  const options=[item.formula||'',...item.bullets].filter(Boolean);
  const equation=options.find(x=>/[=≈∝]/.test(x)&&x.length<=170);
- if(!equation){bullets(s,item.bullets,1.03,2.61,11.13);strip(s,'VERIFY','No equation verified in source; add it manually.');note(s,speakerNotes(item),info,'concept',i);return;}
+ if(!equation){bullets(s,item.bullets,1.03,2.61,11.13);strip(s,'SOURCE CHECK',item.studentTask||'No equation verified in source; add it manually.');note(s,speakerNotes(item),info,'concept',i);return;}
  rect(s,0.74,2.42,8.03,2.43,C.deep,true);
  eyebrow(s,'EQUATION IN SOURCE',1.08,2.84,7,C.amber);
  txt(s,brief(equation,170),1.08,3.40,7.36,0.90,{fontFace:display,fontSize:33,bold:true,color:C.paper,align:'center',fit:'shrink'});
@@ -214,7 +216,7 @@ function example(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numbe
  txt(s,brief(item.keyMessage||item.bullets[0]||item.title,220),1.08,3.28,2.84,1.69,{fontFace:display,fontSize:22,bold:true,color:C.deep,fit:'shrink'});
  rect(s,4.55,2.42,8.02,3.4,C.paper,true,C.line);eyebrow(s,'WORK IT OUT',4.91,2.80,7.1);
  bullets(s,item.bullets,4.90,3.23,7.12,0.70);
- strip(s,'EXPLAIN','Show the evidence or calculations and check units.');
+ strip(s,'APPLY',item.studentTask||'Explain the evidence or calculations and check the units.');
  note(s,speakerNotes(item),info,'concept',i);
 }
 function activity(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:number){
@@ -224,7 +226,7 @@ function activity(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,i:number,t:numb
  rect(s,8.22,2.44,4.35,3.37,C.orange,true);
  ['THINK','SHARE','EXPLAIN'].forEach((word,k)=>{txt(s,String(k+1).padStart(2,'0'),8.62,2.91+k*0.84,0.73,0.34,{fontSize:18,bold:true,color:C.soft});
  txt(s,word,9.54,2.87+k*0.84,2.65,0.45,{fontSize:23,bold:true,color:C.paper});});
- strip(s,'TEAMWORK','Support claims with evidence from the lesson.');
+ strip(s,'TEAMWORK',item.studentTask||'Support claims with evidence from the lesson.');
  note(s,speakerNotes(item),info,'concept',i);
 }
 function vocabulary(pptx:PptxGenJS,info:DeckInfo,terms:LessonResult['vocabulary'],i:number,t:number,audio?:Buffer|null){
@@ -307,11 +309,11 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo,optio
  const vocabularyGroups:LessonResult['vocabulary'][]=[];
  for(let i=0;i<Math.min(result.vocabulary.length,12);i+=6)vocabularyGroups.push(result.vocabulary.slice(i,i+6));
  const qs=result.quiz.slice(0,30);
- const illustratedIndexes=slideItems.map((_,i)=>i).filter(i=>classifySlide(slideItems[i],i,slideItems.length)!=='summary').slice(0,result.durationMinutes===90?6:4);
- const total=1+1+slideItems.length+illustratedIndexes.length+vocabularyGroups.length+(vocabularyGroups.length?1:0)+qs.length+2;
+ // Visuals are embedded directly into relevant content slides; no redundant image-only pages.
+ const addHomework=result.durationMinutes===90;
+ const total=1+1+slideItems.length+vocabularyGroups.length+(vocabularyGroups.length?1:0)+qs.length+1+(addHomework?1:0);
  const generateAudio=options?.pronunciationGenerator??synthesizeEnglishPronunciation;
  const vocabularyAudio=await Promise.all(vocabularyGroups.map(terms=>generateAudio(terms.map(x=>x.termEn).join('. '))));
- const usedIllustrations=new Set<string>();
  cover(pptx,info,result);let page=2;
  objectives(pptx,info,result,page++,total);
  vocabularyGroups.forEach((v,k)=>vocabulary(pptx,info,v,page++,total,vocabularyAudio[k]));
@@ -325,12 +327,12 @@ export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo,optio
   else if(kind==='example')example(pptx,info,item,page++,total);
   else if(kind==='activity')activity(pptx,info,item,page++,total);
   else concept(pptx,info,item,page++,total);
-  if(illustratedIndexes.includes(idx))illustration(pptx,info,item,kind,page++,total,usedIllustrations);
   // Embed quiz checkpoints within the teaching sequence, not as a separate section.
   qs.forEach((q,k)=>{if(quizAfterSlideIndex(k,slideItems.length,qs.length)===idx)quiz(pptx,info,q,k+1,page++,total);});
  });
  if(slideItems.length===0)qs.forEach((q,k)=>quiz(pptx,info,q,k+1,page++,total));
- summary(pptx,info,result,page++,total);homework(pptx,info,page++,total);
+ summary(pptx,info,result,page++,total);
+ if(addHomework)homework(pptx,info,page++,total);
  const out=await pptx.write({outputType:'nodebuffer'});
  return Buffer.isBuffer(out)?out:Buffer.from(out as ArrayBuffer);
 }

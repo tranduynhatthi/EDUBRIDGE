@@ -118,7 +118,7 @@ function illustration(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,kind:SlideK
 function cover(pptx:PptxGenJS,info:DeckInfo,result:LessonResult){
  const s=pptx.addSlide();s.background={color:C.cream};
  rect(s,7.50,0,5.833,H,C.orange);rect(s,7.50,0,0.15,H,C.amber);
- eyebrow(s,'EDUBRIDGE  /  EMI + CLIL',0.78,0.66,6.2);
+ eyebrow(s,'EDUBRIDGE  /  EMI-CLIL V3.2',0.78,0.66,6.2);
  rect(s,0.76,1.30,2.4,0.43,C.soft,true);
  txt(s,info.subject.toUpperCase()+'  ·  '+info.grade,0.92,1.40,2.07,0.18,{fontSize:11,bold:true,color:C.deep,fit:'shrink'});
  txt(s,brief(result.lessonTitleEn||info.title,130),0.77,2.08,6.14,2.34,{fontFace:display,fontSize:46,bold:true,fit:'shrink',valign:'top'});

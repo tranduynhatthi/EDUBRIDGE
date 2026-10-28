@@ -17,11 +17,17 @@ function circleSvg(x:number,y:number,r:number,fill=orange){return '<circle cx="'
 function framedSvg(content:string,label:string){
  return svgHeader+'<rect width="1200" height="650" fill="'+cream+'"/><rect width="1200" height="13" fill="'+orange+'"/>'
  +boxSvg(45,35,1110,82)+textSvg(short(label,51),80,88,35,deep,750)
- +content+textSvg('EDUBRIDGE • Conceptual diagram • Not to scale • Teacher review required',48,622,17,'#78716C',450)+'</svg>';
+ +content+textSvg('EDUBRIDGE • Teaching diagram • Check against approved lesson source',48,622,17,'#78716C',450)+'</svg>';
 }
 function brokenLines(value:unknown,max=24,lines=4){const words=short(value,190).split(' '),out=[];let line='';for(const word of words){if((line+' '+word).trim().length>max&&line){out.push(line);line=word;}else line=(line+' '+word).trim();}if(line)out.push(line);return out.slice(0,lines);}
 type VisualItem={title:string;bullets:string[];keyMessage?:string;formula?:string};
-function slideInfographic(item:VisualItem,kind:string){
+function slideInfographic(item:VisualItem,kind:string,subject:string){
+ const subjectTags:Record<string,string>={
+  'Toán':'REASONING','Hóa học':'CONCEPT','Sinh học':'FUNCTION','Lịch sử':'EVIDENCE',
+  'Địa lí':'PATTERN','Tin học':'LOGIC','Công nghệ':'DESIGN','Ngữ văn':'TEXT',
+  'Giáo dục kinh tế và pháp luật':'CASE','Vật lí':'IDEA'
+ };
+ const tag=subjectTags[subject]||'IDEA';
  const rows=(item.bullets||[]).filter(Boolean).slice(0,4);if(!rows.length)rows.push(item.keyMessage||item.title);
  const parts=[];
  const n=Math.min(4,rows.length),gap=17,w=(1080-(n-1)*gap)/n;
@@ -31,7 +37,7 @@ function slideInfographic(item:VisualItem,kind:string){
  }else{
   for(let i=0;i<n;i++){
    const x=62+i*(w+gap);parts.push(boxSvg(x,195,w,320),boxSvg(x+16,213,w-32,65,'#FFEDD5'));
-   parts.push(textSvg((kind==='process'?'STEP ':kind==='comparison'?'POINT ':'IDEA ')+(i+1),x+w/2,254,22,deep,720,'middle'));
+   parts.push(textSvg((kind==='process'?'STEP ':kind==='comparison'?'FEATURE ':tag+' ')+(i+1),x+w/2,254,22,deep,720,'middle'));
    brokenLines(rows[i],n===4?17:24,5).forEach((l,j)=>parts.push(textSvg(l,x+w/2,337+j*33,n===4?21:25,ink,620,'middle')));
   }
  }
@@ -103,10 +109,10 @@ export function makeTeachingVisual({subject,lessonTitle,item,kind,used}:{subject
  const variant=diagramVariant(subject,lessonTitle,item.title);
  const specific=variant&&!used.has(variant)?variant:null;
  if(specific)used.add(specific);
- const graphic=specific==='particles'?particlesSvg():specific==='boyle'?curveSvg(true):specific==='charles'?curveSvg(false):specific==='magnetic'?magneticSvg():specific==='nucleus'?nucleusSvg():specific==='wave'?waveSvg():slideInfographic(item,kind);
+ const graphic=specific==='particles'?particlesSvg():specific==='boyle'?curveSvg(true):specific==='charles'?curveSvg(false):specific==='magnetic'?magneticSvg():specific==='nucleus'?nucleusSvg():specific==='wave'?waveSvg():slideInfographic(item,kind,subject);
  return {
   data:'data:image/svg+xml;base64,'+Buffer.from(graphic,'utf8').toString('base64'),
   variant:specific||'source-infographic',
-  caption:specific?'Scientific schematic; verify it against the approved lesson source.':'Visual summary of statements from this lesson slide.'
+  caption:specific?'Schematic: check labels and source-specific correctness.':'Subject-based infographic of the supplied lesson text, not a source image.'
  };
 }

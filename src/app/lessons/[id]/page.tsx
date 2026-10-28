@@ -27,6 +27,29 @@ export default function LessonDetail(){
  const {error}=await supabaseBrowser().from('lessons').update({generated_content:result,status:'reviewed'}).eq('id',row.id);if(error)throw error;setUnsaved(false);setMsg('Đã lưu bản chỉnh sửa và đánh dấu là đã rà soát.');}catch(e){setError(e instanceof Error?e.message:'Không thể lưu.');}finally{setBusy(false);}}
  async function assign(){if(!row)return;if(unsaved){setError('Hãy lưu chỉnh sửa trước khi giao bài.');return;}setBusy(true);setError('');try{const r=await authorizedFetch('/api/assignments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lessonId:row.id})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Lỗi giao bài');setMsg(`Đã giao bài! Mã lớp: ${j.access_code} — gửi mã này cho học sinh.`);}catch(e){setError(e instanceof Error?e.message:'Không giao được bài.');}finally{setBusy(false);}}
  async function exportPptx(){if(!row)return;setBusy(true);setError('');try{const r=await authorizedFetch('/api/export/pptx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:row.id})});if(!r.ok){const json=await r.json();throw new Error(json.error||'Không thể xuất PowerPoint.');}const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='EDUBRIDGE_'+row.title.replace(/[^\p{L}\p{N}_-]+/gu,'_')+'.pptx';a.click();URL.revokeObjectURL(url);}catch(e){setError(e instanceof Error?e.message:'Không thể xuất.');}finally{setBusy(false);}}
+ async function regenerateStudio(){
+  if(!row||!result||busy||unsaved)return;
+  if(!row.source_text||row.source_text.length<250||row.source_text.length>25000){
+   setError('Nguồn đã lưu chưa đáp ứng giới hạn 250–25.000 kí tự để tạo lại bằng AI.');return;
+  }
+  setBusy(true);setMsg('');setError('');
+  try{
+   const payload={
+    mode:'teacher',title:row.title,subject:row.subject,grade:row.grade,
+    languageLevel:row.language_level,sourceText:row.source_text,
+    sourceFilename:(row.source_filename||'Nội dung bài học đã lưu').slice(0,160),
+    teacherNotes:(row.teacher_notes||'').slice(0,1500),
+    generationMode:'standard',durationMinutes:result.durationMinutes||45
+   };
+   const response=await authorizedFetch('/api/ai/lesson',{method:'POST',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+   const json=await response.json() as {id?:string;error?:string;code?:string};
+   if(!response.ok||!json.id)throw new Error((json.code?'['+json.code+'] ':'')+
+     (json.error||'Không tạo được bài mới theo EMI/CLIL.')); 
+   router.push('/lessons/'+json.id);
+  }catch(e){setError(e instanceof Error?e.message:'Không tạo được bài mới.');}
+  finally{setBusy(false);}
+ }
  function editQuiz(index:number,update:Partial<LessonResult['quiz'][number]>){setResult(old=>old?{...old,quiz:old.quiz.map((q,i)=>i===index?{...q,...update}:q)}:null);setUnsaved(true);setMsg('Có nội dung mới chưa lưu.');}
  function editSlide(index:number,field:'title'|'teacherScript'|'slideType'|'keyMessage'|'studentTask'|'visualSuggestion'|'formula'|'pronunciationGuide',value:string){setResult(old=>old?{...old,slides:old.slides.map((s,i)=>i===index?(field==='slideType'&&!value?{...s,slideType:undefined}:{...s,[field]:value}):s)}:null);setUnsaved(true);setMsg('Có nội dung mới chưa lưu.');}
  function editSupport(index:number,field:'classroomEnglish'|'expectedStudentResponses',value:string){setResult(old=>old?{...old,slides:old.slides.map((slide,i)=>i===index?{...slide,[field]:value.split('\n').map(x=>x.trim()).filter(Boolean)}:slide)}:null);setUnsaved(true);setMsg('Có nội dung mới chưa lưu.');}
@@ -37,8 +60,20 @@ export default function LessonDetail(){
  <div className="lesson-header"><div><div className="eyebrow">EDUBRIDGE / LESSON PREVIEW</div><h1>{row.title}</h1><p>{row.subject} lớp {row.grade} · Tiếng Anh {row.language_level} · {result.durationMinutes||45} phút · {row.model_name==='offline-template'?'Bản khung không AI':'AI model: '+row.model_name}</p></div><div className="action-row"><button onClick={save} disabled={busy} className="secondary-btn"><Save size={17}/> Lưu chỉnh sửa</button><button onClick={assign} disabled={busy||unsaved} className="secondary-btn">Giao bài cho học sinh</button></div></div>
  {msg&&<p className="success-note"><CheckCircle2 size={16}/> {msg}</p>}{error&&<p className="error">{error}</p>}
  {result.qualityWarnings.length>0&&<div className="attention"><ShieldAlert size={21}/><div><strong>Cảnh báo cần giáo viên kiểm tra</strong><ul>{result.qualityWarnings.map((warning,i)=><li key={i}>{warning}</li>)}</ul></div></div>}
+ <section className="white-panel" style={{margin:'14px 0',padding:16}}>
+  <div className="action-row" style={{alignItems:'center',justifyContent:'space-between'}}>
+   <div><strong>Slide Studio EMI/CLIL V3.2</strong>
+    <p className="muted" style={{margin:'6px 0'}}>
+    {result.slides.some(s=>(s.classroomEnglish?.length||0)>0)
+      ?'Dữ liệu bài này đã có hướng dẫn giao tiếp và phát âm theo EMI/CLIL.'
+      :'Bài này được lưu theo cấu trúc cũ. Xuất lại PPT không tự viết lại kiến thức, từ vựng hoặc lời giảng.'}
+    </p><p className="muted" style={{margin:'0'}}>Tạo bài mới từ nội dung gốc đã lưu, không ghi đè bài hiện tại và không cần tải SGK lại.</p></div>
+   <button type="button" className="secondary-btn" disabled={busy||unsaved}
+    onClick={()=>{void regenerateStudio();}}> <FilePenLine size={17}/> Tạo lại bài với EMI/CLIL V3.2 </button>
+  </div>
+ </section>
  <div className="lesson-tabs">{tabNames.map(t=><button key={t.key} className={tab===t.key?'active':''} onClick={()=>setTab(t.key)}>{t.label}</button>)}</div>
- {tab==='slides'&&<div className="slide-stack"><div className="action-row"><button onClick={exportPptx} disabled={busy||unsaved} className="primary-btn"><Download size={17}/> Xuất PPT Slide Studio</button>{unsaved&&<span className="muted">Hãy lưu chỉnh sửa trước khi xuất PPT.</span>}</div><p className="muted">Câu hỏi được xen vào PowerPoint như các điểm dừng tương tác; đáp án và giải thích chỉ có trong Speaker Notes dành cho giáo viên.</p>{result.slides.map((slide,i)=><div key={i}><section className="white-panel slide-editor" key={i}><div className="slide-num">SLIDE {String(i+1).padStart(2,'0')} · EDUBRIDGE SLIDE STUDIO</div>
+ {tab==='slides'&&<div className="slide-stack"><div className="action-row"><button onClick={exportPptx} disabled={busy||unsaved} className="primary-btn"><Download size={17}/> Xuất PPT · EMI/CLIL V3.2</button>{unsaved&&<span className="muted">Hãy lưu chỉnh sửa trước khi xuất PPT.</span>}</div><p className="muted">Câu hỏi được xen vào PowerPoint như các điểm dừng tương tác; đáp án và giải thích chỉ có trong Speaker Notes dành cho giáo viên.</p>{result.slides.map((slide,i)=><div key={i}><section className="white-panel slide-editor" key={i}><div className="slide-num">SLIDE {String(i+1).padStart(2,'0')} · EDUBRIDGE SLIDE STUDIO</div>
  <div className="form-grid">
  <label className="field">Bố cục slide<select value={slide.slideType||'auto'} onChange={e=>editSlide(i,'slideType',e.target.value==='auto'?'':e.target.value)}>
  <option value="auto">Tự chọn bố cục – {classifySlide(slide,i,result.slides.length)}</option>

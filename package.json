@@ -20,6 +20,7 @@
     "test:offline": "node tests/offline-lesson.cjs",
     "test:models": "node tests/model-routing.cjs",
     "test:slides": "node tests/slide-studio.cjs",
+    "test:emi": "node tests/emi-clil.cjs",
     "test:subjects": "node tests/subject-visibility.cjs",
     "test:library-only": "node tests/database-only-library.cjs",
     "test:materials": "node tests/teaching-materials.cjs"

@@ -33,6 +33,7 @@ export const TeacherSourceRequestSchema=z.object({
 // Structured Outputs: simple closed objects/arrays only, to maximize model compatibility.
 export const LessonResultSchema = z.object({
   lessonTitleEn: z.string(),
+  durationMinutes:z.union([z.literal(45),z.literal(90)]).optional(),
   contentObjectives: z.array(z.string()),
   languageObjectives: z.array(z.string()),
   keyConcepts: z.array(z.object({vi: z.string(), en: z.string()})),

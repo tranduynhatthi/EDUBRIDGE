@@ -3,7 +3,7 @@ const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p
 for(const p of ['src/app/builder/page.tsx','src/app/student/page.tsx','src/app/assignments/page.tsx','src/app/dictionary/page.tsx','src/app/practice/page.tsx','src/app/api/ai/lesson/route.ts','src/app/api/export/pptx/route.ts','supabase/04_bai1_student_cycle.sql'])assert(fs.existsSync(path.join(root,p)),p+' not found');
 assert(read('src/app/api/export/pptx/route.ts').includes('buildBeautifulDeck('));
 assert(read('src/lib/slide-deck.ts').includes('s.addNotes('));
-assert(read('src/lib/slide-deck.ts').includes("note(s,item.teacherScript,info,"));
+assert(read('src/lib/slide-deck.ts').includes("speakerNotes(item)"));
 assert(read('src/lib/slide-deck.ts').includes('CLASSROOM ENGLISH'));
 assert(read('src/app/lessons/[id]/page.tsx').includes('LessonResultSchema.safeParse(result)'));
 assert(read('src/app/lessons/[id]/page.tsx').includes('disabled={busy||unsaved}'));

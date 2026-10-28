@@ -122,7 +122,7 @@ export default function BuilderPage(){
  return <RequireLogin><AppShell subtitle="Chọn bài học">
   <div className="page-heading"><div><div className="eyebrow">EDUBRIDGE / LESSON LIBRARY</div>
    <h1>Chọn bài học từ cơ sở dữ liệu</h1>
-   <p>Giáo viên chỉ cần chọn môn, lớp và bài học. Không cần tải sách hoặc nhập lại nội dung.</p></div>
+   <p>Giáo viên chỉ cần chọn môn, lớp và bài học. Không cần tải sách hoặc nhập lại nội dung.</p><p className="muted"><strong>EMI/CLIL Slide Studio V3.2:</strong> PPT trực quan, có hỗ trợ phát âm, giao tiếp lớp học và Speaker Notes theo từng môn. Bài đã lưu trước đây cần tạo lại để có nội dung AI mới.</p></div>
    <div className="header-symbol"><LibraryBig size={29}/></div></div>
   <form className="builder-grid" onSubmit={createLesson}>
    <div className="form-main">
@@ -179,7 +179,7 @@ export default function BuilderPage(){
    </div>
    <aside className="form-aside">
     <section className="white-panel preview-panel">
-     <div className="aside-title"><Sparkles size={20}/> EDUBRIDGE AI</div>
+     <div className="aside-title"><Sparkles size={20}/> EDUBRIDGE AI · PPT EMI/CLIL V3.2</div>
      <h3>Tạo bài dạy môn {subject}</h3>
      <ul className="feature-list">
       <li><BookOpen size={16}/> Mục tiêu kiến thức và ngôn ngữ</li>

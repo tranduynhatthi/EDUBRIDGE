@@ -52,13 +52,15 @@ export const lessonJsonSchema = {
           },
           "exampleEn": {
             "type": "string"
-          }
+          },
+          "ipa": {"type":"string"}
         },
         "required": [
           "termEn",
           "termVi",
           "definitionEn",
-          "exampleEn"
+          "exampleEn",
+          "ipa"
         ]
       }
     },
@@ -104,7 +106,11 @@ export const lessonJsonSchema = {
           "keyMessage": {"type":"string"},
           "studentTask": {"type":"string"},
           "visualSuggestion": {"type":"string"},
-          "formula": {"type":"string"}
+          "formula": {"type":"string"},
+          "classroomEnglish": {"type":"array","items":{"type":"string"}},
+          "expectedStudentResponses": {"type":"array","items":{"type":"string"}},
+          "pronunciationGuide": {"type":"string"},
+          "timingMinutes": {"type":"integer"}
         },
         "required": [
           "title",
@@ -114,7 +120,11 @@ export const lessonJsonSchema = {
           "keyMessage",
           "studentTask",
           "visualSuggestion",
-          "formula"
+          "formula",
+          "classroomEnglish",
+          "expectedStudentResponses",
+          "pronunciationGuide",
+          "timingMinutes"
         ]
       }
     },

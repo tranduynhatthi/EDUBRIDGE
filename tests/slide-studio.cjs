@@ -26,10 +26,10 @@ assert(schema.includes("slideType:z.enum("),'Structured slide types must be stor
 const fake={
 lessonTitleEn:'States of Matter',contentObjectives:['Recognise particle arrangement','Compare three states','Explain transitions'],
 languageObjectives:['Explain in English','Ask a question'],
-keyConcepts:[],vocabulary:[{termEn:'Melting',termVi:'Nóng chảy',definitionEn:'Transition from solid to liquid',exampleEn:'Ice melts'}],
+keyConcepts:[],vocabulary:[{termEn:'Melting',termVi:'Nóng chảy',definitionEn:'Transition from solid to liquid',exampleEn:'Ice melts',ipa:'/ˈmel.tɪŋ/'}],
 classroomPhrases:[{english:'Please look at the diagram.',vietnamese:'Hãy quan sát sơ đồ.'},{english:'What do you notice?',vietnamese:'Em nhận thấy điều gì?'}],
 slides:[
- {slideType:'warmup',title:'Why does ice melt?',bullets:['Observe the change'],teacherScript:'Ask for predictions',keyMessage:'Why does ice melt?',studentTask:'Think, predict and explain.'},
+ {slideType:'warmup',title:'Why does ice melt?',bullets:['Observe the change'],teacherScript:'Ask for predictions',keyMessage:'Why does ice melt?',studentTask:'Think, predict and explain.',classroomEnglish:['Can you predict what happens?'],expectedStudentResponses:['The ice will melt.'],pronunciationGuide:'melting /ˈmel.tɪŋ/',timingMinutes:4},
  {slideType:'comparison',title:'Solid and liquid',bullets:['Particles in a solid are closely packed','Liquids flow'],teacherScript:'Compare states'},
  {slideType:'diagram',title:'Particle arrangement',bullets:['Solid','Liquid','Gas'],teacherScript:'Compare these labels'},
  {slideType:'formula',title:'Thermal energy',formula:'Q = mcΔT',bullets:['Q = mcΔT','m: mass','c: specific heat'],teacherScript:'Check units'},
@@ -53,13 +53,15 @@ const cmd=[
  "const wavs=Object.keys(zip.files).filter(x=>x.startsWith('ppt/media/')&&x.endsWith('.wav'));",
  "if(!wavs.length)throw Error('Vocabulary audio is not embedded in PPTX');",
  "const illustrations=Object.keys(zip.files).filter(x=>x.startsWith('ppt/media/')&&(x.endsWith('.svg')||x.endsWith('.png')));",
- "if(illustrations.length<4)throw Error('Expected at least 4 embedded educational images, got '+illustrations.length);",
+ "if(illustrations.length<2)throw Error('Expected embedded warm-up and concept illustrations, got '+illustrations.length);",
  "const slideXml=await Promise.all(Object.keys(zip.files).filter(x=>x.startsWith('ppt/slides/slide')&&x.endsWith('.xml')).map(x=>zip.file(x).async('string')));",
+"if(slideXml.length!==1+1+data.slides.length+1+1+data.quiz.length+1)throw Error('45-minute PPT adds redundant slides');",
+"if(!slideXml.some(x=>x.includes('EMI-CLIL V3.2')))throw Error('Missing current studio version watermark');",
 "for(let i=0;i<5;i++){if(slideXml.filter(x=>x.includes('Which state flows? Number '+i)).length!==1)throw Error('Missing or repeated PPT quiz question '+i)}",
 "if(slideXml.some(x=>x.includes('Liquid flows.')))throw Error('Teacher answer leaked into PowerPoint slide');",
 "const notes=Object.keys(zip.files).filter(x=>x.startsWith('ppt/notesSlides/notesSlide')&&x.endsWith('.xml'));",
  "const joined=(await Promise.all(notes.map(x=>zip.file(x).async('string')))).join('');",
- "if(!joined.includes('CLASSROOM ENGLISH')||!joined.includes('Please look at the diagram.'))throw Error('Missing bilingual teacher classroom notes');",
+ "if(!joined.includes('CLASSROOM ENGLISH')||!joined.includes('Please look at the diagram.')||!joined.includes('EXPECTED STUDENT RESPONSES')||!joined.includes('The ice will melt.'))throw Error('Missing detailed teacher notes');",
  "console.log('PASS SVG illustrations',illustrations.length,'speaker-note files',notes.length,'bytes',buf.length);"
 ].join('');
 const p=spawnSync(process.execPath,['--experimental-strip-types','--input-type=module','-e',cmd,path.join(process.cwd(),'src/lib/slide-deck.ts'),JSON.stringify(fake)],{encoding:'utf8',maxBuffer:5e6});

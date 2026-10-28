@@ -52,6 +52,7 @@ export async function POST(request: Request) {
   }else{
     const incoming = (catalog as {success:true;data:{textbookLessonId:string;languageLevel:'A2'|'B1'|'B2';teacherNotes:string;generationMode:'standard'|'advanced';durationMinutes:45|90}}).data;
     generationMode=incoming.generationMode;
+    durationMinutes=incoming.durationMinutes;
     // Only approved catalog lessons may be used on the catalog path.
     const {data:lesson,error:lessonError}=await auth.supabase.from('textbook_lessons')
       .select('id,title,source_text,start_page,end_page,is_published,textbooks!inner(title,subject,grade,book_series,is_active)')

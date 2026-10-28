@@ -64,7 +64,7 @@ function speakerNotes(item:ContentSlide):string {
  if(item.classroomEnglish?.length)lines.push('', 'CLASSROOM INSTRUCTIONS FOR THIS SLIDE',...item.classroomEnglish.map(x=>'• '+x));
  if(item.expectedStudentResponses?.length)lines.push('', 'EXPECTED STUDENT RESPONSES / CÂU TRẢ LỜI DỰ KIẾN',...item.expectedStudentResponses.map(x=>'• '+x));
  if(item.pronunciationGuide?.trim())lines.push('', 'PRONUNCIATION / PHÁT ÂM',item.pronunciationGuide);
- return lines.join('\\n');
+ return lines.join('\n');
 }
 function note(s:Slide,words:string,info?:DeckInfo,phase='concept',index=0){
  const bank=classroomTalk[phase]??classroomTalk.concept;

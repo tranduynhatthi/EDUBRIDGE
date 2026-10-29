@@ -111,9 +111,27 @@ export default function LibraryAdmin(){
   }catch(err){setError(err instanceof Error?err.message:'Không đọc được tệp văn bản.');}
   finally{setBusy(false);}
  }
+ async function extractPdfText(){
+  if(!editId||selectedRecord?.is_published||busy)return;
+  if(editText.trim()&&!window.confirm('Nội dung trích mới sẽ chỉ thay chữ đang hiển thị, chưa ghi đè dữ liệu đã lưu. Bạn có muốn tiếp tục?'))return;
+  setBusy(true);setError('');setStatus('');setExtractError('');setExtractStatus('Đang đọc lớp chữ của các trang PDF thuộc bài này, không gọi Gemini...');
+  try{
+   const r=await authorizedFetch('/api/admin/lessons/'+editId+'/extract-text',{method:'POST'});
+   const json=await r.json() as {sourceText?:string;extractionNote?:string;error?:string;code?:string;extractedLength?:number};
+   if(!r.ok||!json.sourceText)throw new Error((json.code?'['+json.code+'] ':'')+(json.error||'Không lấy được chữ từ PDF.'));
+   setEditText(json.sourceText);setEditNote(json.extractionNote||'Trích lớp văn bản PDF, cần hậu kiểm trước khi duyệt.');
+   setConfirmed(false);
+   setExtractStatus('Đã lấy '+(json.extractedLength||json.sourceText.length).toLocaleString('vi-VN')+' ký tự trực tiếp từ PDF, không tốn Gemini. Đối chiếu hình vẽ, số liệu và công thức.');
+   setStatus('Đã nhập chữ vào ô chỉnh sửa. Chưa ghi đè bản lưu; sau khi kiểm tra, bấm Lưu bản nháp.');
+  }catch(e){
+   const msg=e instanceof Error?e.message:'Không đọc được PDF.';
+   setExtractError(msg);
+   setExtractStatus('PDF có thể là ảnh quét. Nếu không có lớp văn bản, dùng nút AI đọc PDF ảnh quét bên dưới.');
+  }finally{setBusy(false);}
+ }
  async function analyzeScan(){
   if(!editId||selectedRecord?.is_published)return;
-  if(editText.trim()&&!window.confirm('Quét lại bằng Gemini có thể dùng quota/trả phí. Kết quả sẽ thay văn bản HIỂN THỊ trong ô chỉnh sửa nhưng KHÔNG ghi đè nội dung đã lưu nếu bản nháp đã có chữ. Bạn có đồng ý không?'))return;
+  if(!window.confirm('AI đọc PDF ảnh quét sẽ sử dụng hạn mức hoặc tính phí Gemini. Kết quả chỉ hiển thị để hậu kiểm; bản nguồn đã lưu không bị ghi đè tự động. Bạn đồng ý thực hiện?'))return;
   setBusy(true);setError('');setStatus('');setExtractError('');setExtractStatus('Đang tải và tách các trang SGK từ kho riêng tư, sau đó gửi Gemini đọc hình ảnh. Vui lòng chờ...');
   try{
    const r=await authorizedFetch(`/api/admin/lessons/${editId}/analyze-pdf`,{method:'POST'});
@@ -182,15 +200,20 @@ export default function LibraryAdmin(){
  {selectedRecord&&<section id="review-lesson" className="white-panel form-section" style={{marginTop:20}}><h2><span className="step-dot">3</span> Hậu kiểm và duyệt: {selectedRecord.title}</h2>
  <div className="attention"><Info size={19}/><div>Đọc đối chiếu với bản PDF gốc. Phần trích chữ có thể thiếu hình vẽ, chỉ số trên/dưới, dấu âm, căn thức hoặc ký hiệu. Không công bố nếu chưa xử lí lỗi kiến thức.</div></div>
  {!selectedRecord.is_published&&<div style={{marginBottom:18}}>
- <p className="muted">Nếu PDF quét lỗi hoặc mới đọc được một phần, hãy dán văn bản vào ô bên dưới hoặc nhập từ file Word/TXT để cập nhật nhanh, không cần gọi AI. Khi thực sự cần, có thể cho Gemini quét lại PDF; bản đã lưu sẽ không tự bị ghi đè.</p>
+ <p className="muted">Không cần Word. Chọn cách đọc trực tiếp những trang PDF đã lưu cho bài này. Thử lấy chữ miễn phí trước; nếu PDF là ảnh quét không có lớp văn bản thì dùng Gemini để nhận dạng.</p>
+ <div className="action-row" style={{margin:'12px 0'}}>
+  <button type="button" className="primary-btn" disabled={busy||aiCheckBusy} onClick={()=>{void extractPdfText();}}>
+   <ScanText size={17}/> {busy?'Đang đọc PDF...':'Lấy nội dung từ PDF đã lưu (miễn phí)'}
+  </button>
+ </div>
  <label className="upload-box" style={{marginBottom:12,cursor:busy?'not-allowed':'pointer'}}>
-  <FileUp size={22}/><b>Nhập nhanh nội dung 1 bài từ Word (.docx), TXT hoặc Markdown</b>
+  <FileUp size={22}/><b>Tùy chọn: nhập văn bản đã có từ Word hoặc TXT</b>
   <span>Chọn tệp chỉ chứa nội dung bài đang mở, tối đa 10 MB; bản lưu cũ được bảo toàn cho tới khi nhấn Lưu bản nháp.</span>
   <input type="file" accept=".docx,.txt,.md,text/plain" hidden disabled={busy} onChange={e=>{void importDraftTextFile(e);}}/>
  </label>
  <div className="action-row">
  <button type="button" className="secondary-btn" onClick={checkGemini} disabled={aiCheckBusy||busy}><ShieldCheck size={16}/>{aiCheckBusy?'Đang kiểm tra Gemini...':'Kiểm tra kết nối Gemini'}</button>
- <button type="button" className="primary-btn" onClick={analyzeScan} disabled={busy||aiCheckBusy}><ScanText size={17}/> {busy?'Đang đọc PDF, vui lòng chờ…':'AI quét lại PDF (có thể tốn phí)'}</button>
+ <button type="button" className="secondary-btn" onClick={analyzeScan} disabled={busy||aiCheckBusy}><ScanText size={17}/> {busy?'Đang đọc PDF, vui lòng chờ…':'AI đọc PDF ảnh quét (dùng Gemini)'}</button>
  </div>
  {aiCheckResult&&<p role="status" style={{marginTop:12}}>{aiCheckResult}</p>}
  {extractStatus&&<p role="status" style={{marginTop:8}}>{extractStatus}</p>}

@@ -20,7 +20,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   .eq('id',id).single();
  if(error||!lesson)return Response.json({error:'Bài không tồn tại.'},{status:404});
  if(lesson.is_published)return Response.json({error:'Bài đã được duyệt; không ghi đè bằng AI.'},{status:409});
- if((lesson.source_text||'').trim())return Response.json({error:'Bản nháp đã có nội dung. Hãy chỉnh sửa/hậu kiểm, không ghi đè bằng AI.'},{status:409});
+ // Partial drafts may be rescanned, but their saved source is never overwritten by AI.
  const book=lesson.textbooks as unknown as {storage_path:string;page_count:number;title:string;book_series:string;grade:string};
  const count=lesson.end_page-lesson.start_page+1;
  if(count<1||count>10||lesson.start_page<1||lesson.end_page>book.page_count)
@@ -99,6 +99,11 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
      code:'PARTIAL_EXTRACTED_NOTES',draftSourceText:result.text,extractionNote:note,warnings:resultWarnings,
      extractedLength:result.text.length,method},{status:422});
   }
+  if((lesson.source_text||'').trim()){
+   return Response.json({id:lesson.id,sourceText:result.text,extractionNote:note,
+    warnings:resultWarnings,extractedLength:result.text.length,method,previewOnly:true,
+    notice:'Đã trích xuất lại để xem trước. Nội dung nháp đã lưu KHÔNG bị thay đổi; quản trị viên phải hậu kiểm và bấm Lưu bản nháp nếu muốn dùng kết quả này.'});
+  }
   const {data:updated,error:saveError}=await auth.supabase.from('textbook_lessons')
    .update({source_text:result.text,extraction_note:note})
    .eq('id',id).eq('is_published',false).eq('source_text','').select('id').single();
@@ -114,6 +119,6 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   const detail=describeGeminiError(e);
   console.error('EDUBRIDGE PDF extraction error',{code:detail.code,type:e instanceof Error?e.name:'unknown'});
   if(detail.code!=='GEMINI_UNKNOWN_ERROR')return Response.json({error:detail.message,code:detail.code},{status:detail.status});
-  return Response.json({error:'Lỗi khi xử lý PDF. Hãy thử lại hoặc dùng tùy chọn Tự đưa nội dung SGK.',code:'PDF_PROCESSING_FAILED'},{status:502});
+  return Response.json({error:'Lỗi khi xử lý PDF. Hãy thử lại hoặc nhập văn bản từ Word/TXT vào bản nháp.',code:'PDF_PROCESSING_FAILED'},{status:502});
  }
 }

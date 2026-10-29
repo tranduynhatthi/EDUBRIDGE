@@ -18,6 +18,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
  if(!parsed.success)return Response.json({error:parsed.error.issues[0]?.message},{status:400});
  const v=parsed.data;
  if(v.isPublished&&!v.confirmedReview)return Response.json({error:'Phải xác nhận đã hậu kiểm kiến thức, công thức và trang nguồn trước khi công bố.'},{status:400});
+ if(v.isPublished&&v.sourceText.length>25000)return Response.json({error:'Bài có trên 25.000 ký tự, vượt khả năng tạo bài hiện tại. Hãy rút gọn nguồn hoặc chia nhỏ trước khi duyệt.'},{status:422});
  const {data,error}=await auth.supabase.from('textbook_lessons').update({
   source_text:v.sourceText,extraction_note:v.extractionNote,is_published:v.isPublished,
   reviewed_by:v.isPublished?auth.user.id:null,reviewed_at:v.isPublished?new Date().toISOString():null,

@@ -62,18 +62,18 @@ export default function LessonDetail(){
  {result.qualityWarnings.length>0&&<div className="attention"><ShieldAlert size={21}/><div><strong>Cảnh báo cần giáo viên kiểm tra</strong><ul>{result.qualityWarnings.map((warning,i)=><li key={i}>{warning}</li>)}</ul></div></div>}
  <section className="white-panel" style={{margin:'14px 0',padding:16}}>
   <div className="action-row" style={{alignItems:'center',justifyContent:'space-between'}}>
-   <div><strong>Slide Studio EMI/CLIL V3.2</strong>
+   <div><strong>Slide Studio EMI/CLIL V{result.subjectPromptVersion||'3.2'}</strong>
     <p className="muted" style={{margin:'6px 0'}}>
-    {result.slides.some(s=>(s.classroomEnglish?.length||0)>0)
-      ?'Dữ liệu bài này đã có hướng dẫn giao tiếp và phát âm theo EMI/CLIL.'
-      :'Bài này được lưu theo cấu trúc cũ. Xuất lại PPT không tự viết lại kiến thức, từ vựng hoặc lời giảng.'}
+    {result.subjectPromptVersion==='4.0'
+      ?'Bài giảng được tạo bằng prompt chuyên sâu riêng cho môn '+row.subject+'.'
+      :'Bài này chưa được tạo bằng bộ prompt chuyên sâu V4.0. Xuất PPT từ bài cũ không tự viết lại nội dung.'}
     </p><p className="muted" style={{margin:'0'}}>Tạo bài mới từ nội dung gốc đã lưu, không ghi đè bài hiện tại và không cần tải SGK lại.</p></div>
    <button type="button" className="secondary-btn" disabled={busy||unsaved}
-    onClick={()=>{void regenerateStudio();}}> <FilePenLine size={17}/> Tạo lại bài với EMI/CLIL V3.2 </button>
+    onClick={()=>{void regenerateStudio();}}> <FilePenLine size={17}/> Tạo lại bài bằng prompt môn học V4.0 </button>
   </div>
  </section>
  <div className="lesson-tabs">{tabNames.map(t=><button key={t.key} className={tab===t.key?'active':''} onClick={()=>setTab(t.key)}>{t.label}</button>)}</div>
- {tab==='slides'&&<div className="slide-stack"><div className="action-row"><button onClick={exportPptx} disabled={busy||unsaved} className="primary-btn"><Download size={17}/> Xuất PPT · EMI/CLIL V3.2</button>{unsaved&&<span className="muted">Hãy lưu chỉnh sửa trước khi xuất PPT.</span>}</div><p className="muted">Câu hỏi được xen vào PowerPoint như các điểm dừng tương tác; đáp án và giải thích chỉ có trong Speaker Notes dành cho giáo viên.</p>{result.slides.map((slide,i)=><div key={i}><section className="white-panel slide-editor" key={i}><div className="slide-num">SLIDE {String(i+1).padStart(2,'0')} · EDUBRIDGE SLIDE STUDIO</div>
+ {tab==='slides'&&<div className="slide-stack"><div className="action-row"><button onClick={exportPptx} disabled={busy||unsaved} className="primary-btn"><Download size={17}/> Xuất PPT · V{result.subjectPromptVersion||'3.2'}</button>{unsaved&&<span className="muted">Hãy lưu chỉnh sửa trước khi xuất PPT.</span>}</div><p className="muted">Câu hỏi được xen vào PowerPoint như các điểm dừng tương tác; đáp án và giải thích chỉ có trong Speaker Notes dành cho giáo viên.</p>{result.slides.map((slide,i)=><div key={i}><section className="white-panel slide-editor" key={i}><div className="slide-num">SLIDE {String(i+1).padStart(2,'0')} · EDUBRIDGE SLIDE STUDIO</div>
  <div className="form-grid">
  <label className="field">Bố cục slide<select value={slide.slideType||'auto'} onChange={e=>editSlide(i,'slideType',e.target.value==='auto'?'':e.target.value)}>
  <option value="auto">Tự chọn bố cục – {classifySlide(slide,i,result.slides.length)}</option>

@@ -1,0 +1,26 @@
+// PDF-only textbook ingestion test: server must use saved private PDF and never overwrite.
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const src=p=>fs.readFileSync(p,'utf8');
+const fast=src('src/app/api/admin/lessons/[id]/extract-text/route.ts');
+const vision=src('src/app/api/admin/lessons/[id]/analyze-pdf/route.ts');
+const ui=src('src/app/admin/library/page.tsx');
+assert(fast.includes('requireAdmin(request)'),'Text extraction must require admin role');
+assert(fast.includes("storage.from('edubridge-textbooks').download(book.storage_path)"),'Extraction must read the saved private textbook PDF');
+assert(fast.includes("await pdf.getPage(pageNum)")&&fast.includes("await page.getTextContent()"),'Use real PDF text, not hallucinated content');
+assert(fast.includes("pageNum<=lesson.end_page"),'Only read selected lesson range');
+assert(fast.includes('previewOnly:true'),'No writes before review');
+assert(!fast.includes("from('textbook_lessons').update("),'PDF text extraction may not overwrite draft');
+assert(!fast.includes('generateGeminiJson'),'Text-layer extraction must not spend AI quota');
+assert(fast.includes('PDF_NO_TEXT_LAYER'),'Scanned PDF must receive an actionable error');
+assert(fast.includes('MAX_SOURCE_LENGTH=30000'),'Respect existing stored-source length constraints');
+assert(vision.includes('primaryError=error'),'Gemini error must trigger partial retry');
+assert(vision.includes('Promise.allSettled(groups.map'),'Partial page groups must retry even when first request fails');
+assert(vision.includes('GEMINI_QUOTA_LIMIT'),'Nonretryable billed API errors must not repeat');
+assert(vision.includes("if(lesson.is_published)return Response.json"),'Do not overwrite approved source');
+assert(vision.includes(".eq('source_text','')"),'Original blank-only persistence guard must remain');
+assert(ui.includes('/extract-text'),'Admin UI must trigger no-cost PDF extraction');
+assert(ui.includes('Lấy nội dung từ PDF đã lưu (miễn phí)'),'PDF-only workflow must be obvious');
+assert(ui.includes('AI đọc PDF ảnh quét (dùng Gemini)'),'OCR fallback button must remain');
+assert(ui.includes('AI đọc PDF ảnh quét sẽ sử dụng hạn mức hoặc tính phí Gemini'),'Explicit consent before API cost');
+assert(ui.includes("setConfirmed(false)"),'Extracted content must reset review confirmation');
+console.log('PASS private PDF-only text/vision ingestion, explicit cost and draft safety checks');

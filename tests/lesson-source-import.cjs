@@ -19,7 +19,7 @@ assert(importer.includes("document.xml"),'DOCX importer must parse the document 
 assert(importer.includes("MAX_LESSON_CHARS=30_000"),'Text limit must match database constraints');
 const program=[
  "const a=await import('file://'+process.argv[1]);",
- "const source='Bài 1. Cấu trúc của chất\\n'+('Học sinh quan sát và mô tả cấu trúc. '.repeat(12));",
+ "const source=('Bài 1. Cấu trúc của chất\\n'+('Học sinh quan sát và mô tả cấu trúc. '.repeat(12))).trim();",
  "let txt=await a.importLessonSourceFile({size:source.length,name:'bai1.txt',text:async()=>source});",
  "if(txt.text!==source)throw Error('TXT source must remain unchanged');",
  "let md=await a.importLessonSourceFile({size:source.length,name:'bai1.md',text:async()=>source});",

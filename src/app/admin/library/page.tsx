@@ -226,7 +226,7 @@ export default function LibraryAdmin(){
  <label className="field">Ghi chú kiểm duyệt<textarea rows={3} value={editNote} onChange={e=>setEditNote(e.target.value)}/></label>
  <label className="check-row"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>Tôi đã đối chiếu trang nguồn và kiểm tra khái niệm, công thức, đơn vị, hình ảnh liên quan của bài.</span></label>
  <div className="action-row"><button disabled={busy||editText.length<250} className="secondary-btn" onClick={()=>saveReview(false)} type="button"><Save size={17}/> Lưu bản nháp</button>
- <button disabled={busy||!confirmed||editText.length<250} className="primary-btn" onClick={()=>saveReview(true)} type="button"><ShieldCheck size={17}/> Duyệt và cho giáo viên chọn</button></div>
+ <button disabled={busy||!confirmed||editText.length<250||editText.length>25000} className="primary-btn" onClick={()=>saveReview(true)} type="button"><ShieldCheck size={17}/> Duyệt và cho giáo viên chọn</button></div>
  </section>}
  </>}
  </AppShell></RequireLogin>;

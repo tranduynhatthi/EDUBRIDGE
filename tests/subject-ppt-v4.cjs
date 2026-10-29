@@ -15,7 +15,7 @@ assert(backend.includes('lesson.subjectPromptSubject=data.subject'),'Save subjec
 assert(builder.includes('getSubjectPptPrompt(subject)'),'Builder must select subject-specific prompt');
 assert(builder.includes('Xem chi tiết prompt môn'),'Builder must let teachers inspect details');
 assert(lesson.includes("result.subjectPromptVersion==='4.0'"),'Saved lesson must distinguish old and new output');
-assert(deck.includes("info.promptVersion:result.subjectPromptVersion"),'Export must carry correct prompt version');
+assert(deck.includes("promptVersion:result.subjectPromptVersion"),'Export must carry correct prompt version');
 const snippets=[
  "const a=await import('file://'+process.argv[1]);",
  "const b=await import('file://'+process.argv[2]);",

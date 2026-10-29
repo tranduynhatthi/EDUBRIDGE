@@ -5,7 +5,7 @@ import {synthesizeEnglishPronunciation} from './pronunciation-audio.ts';
 import {getSubjectTeachingGuide} from './emi-clil-prompt.ts';
 
 export type SlideKind='cover'|'objectives'|'warmup'|'concept'|'process'|'comparison'|'diagram'|'formula'|'example'|'activity'|'quiz'|'summary'|'homework';
-export type DeckInfo={title:string;subject:string;grade:string;level?:string;classroomPhrases?:LessonResult['classroomPhrases']};
+export type DeckInfo={title:string;subject:string;grade:string;level?:string;promptVersion?:string;classroomPhrases?:LessonResult['classroomPhrases']};
 type Slide=ReturnType<PptxGenJS['addSlide']>;
 type ContentSlide=LessonResult['slides'][number];
 const W=13.333,H=7.5;
@@ -37,7 +37,7 @@ function bullets(s:Slide,items:string[],x:number,y:number,w:number,gap=0.88){
 function shell(pptx:PptxGenJS,info:DeckInfo,section:string,index:number,total:number){
  const s=pptx.addSlide();s.background={color:C.cream};
  rect(s,0,0,W,0.095,C.orange);
- eyebrow(s,'EDUBRIDGE / EMI-CLIL V3.2',0.72,0.35,5.9);
+ eyebrow(s,'EDUBRIDGE / EMI-CLIL V'+(info.promptVersion||'3.2'),0.72,0.35,5.9);
  txt(s,info.subject+'  ·  GRADE '+info.grade,9.05,0.34,3.54,0.24,{fontSize:10.8,color:C.muted,align:'right'});
  divider(s,0.73,6.98,11.87);
  eyebrow(s,section,0.74,7.11,8,C.muted);
@@ -118,7 +118,7 @@ function illustration(pptx:PptxGenJS,info:DeckInfo,item:ContentSlide,kind:SlideK
 function cover(pptx:PptxGenJS,info:DeckInfo,result:LessonResult){
  const s=pptx.addSlide();s.background={color:C.cream};
  rect(s,7.50,0,5.833,H,C.orange);rect(s,7.50,0,0.15,H,C.amber);
- eyebrow(s,'EDUBRIDGE  /  EMI-CLIL V3.2',0.78,0.66,6.2);
+ eyebrow(s,'EDUBRIDGE  /  EMI-CLIL V'+(info.promptVersion||'3.2'),0.78,0.66,6.2);
  rect(s,0.76,1.30,2.4,0.43,C.soft,true);
  txt(s,info.subject.toUpperCase()+'  ·  '+info.grade,0.92,1.40,2.07,0.18,{fontSize:11,bold:true,color:C.deep,fit:'shrink'});
  txt(s,brief(result.lessonTitleEn||info.title,130),0.77,2.08,6.14,2.34,{fontFace:display,fontSize:46,bold:true,fit:'shrink',valign:'top'});
@@ -302,9 +302,9 @@ export function quizAfterSlideIndex(quizIndex:number,slideCount:number,quizCount
  return Math.min(slideCount-1,Math.max(0,Math.ceil((quizIndex+1)*slideCount/(quizCount+1))-1));
 }
 export async function buildBeautifulDeck(result:LessonResult,info:DeckInfo,options?:{pronunciationGenerator?:(words:string)=>Promise<Buffer|null>}):Promise<Buffer>{
- info={...info,classroomPhrases:result.classroomPhrases};
+ info={...info,classroomPhrases:result.classroomPhrases,promptVersion:result.subjectPromptVersion||'3.2'};
  const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';pptx.author='EDUBRIDGE';
- pptx.subject=info.subject+' · Grade '+info.grade+' · EMI/CLIL';pptx.title=info.title;
+ pptx.subject=info.subject+' · Grade '+info.grade+' · EMI/CLIL Subject Prompt V'+info.promptVersion;pptx.title=info.title;
  const slideItems=result.slides.slice(0,result.durationMinutes===90?14:10);
  const vocabularyGroups:LessonResult['vocabulary'][]=[];
  for(let i=0;i<Math.min(result.vocabulary.length,12);i+=6)vocabularyGroups.push(result.vocabulary.slice(i,i+6));

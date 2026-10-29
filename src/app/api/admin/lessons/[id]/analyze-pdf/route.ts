@@ -63,32 +63,56 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
    return reviewExtractedNotes(parsed.data);
   }
 
-  // One pass is cheapest. When output is too short, read two smaller page ranges in parallel.
-  let result=await readRange(lesson.start_page,lesson.end_page,55000);
+  // First try the requested page range. If Gemini fails or returns too little,
+  // retry smaller ranges within the same request rather than stopping at first error.
+  let result=reviewExtractedNotes({sourceText:'',warnings:[]});
   let method='full-pdf';
-  if(result.text.length<MIN_APPROVABLE_CHARS&&count>1){
+  let primaryError:unknown=null;
+  try{
+   result=await readRange(lesson.start_page,lesson.end_page,45000);
+  }catch(error){
+   primaryError=error;
+   const detail=describeGeminiError(error);
+   // Retrying for exhausted quota, invalid credentials or unavailable models
+   // cannot recover and may unnecessarily increase spending.
+   if(['GEMINI_QUOTA_LIMIT','GEMINI_KEY_OR_PERMISSION','GEMINI_MODEL_NOT_FOUND','GEMINI_BLOCKED'].includes(detail.code))
+    throw error;
+  }
+  if((primaryError||result.text.length<MIN_APPROVABLE_CHARS)&&count>1){
    const mid=lesson.start_page+Math.ceil(count/2)-1;
    const groups:[[number,number],[number,number]]=[[lesson.start_page,mid],[mid+1,lesson.end_page]];
-   const details=await Promise.allSettled(groups.map(([start,end])=>readRange(start,end,50000)));
+   const details=await Promise.allSettled(groups.map(([start,end])=>readRange(start,end,42000)));
    const notes:string[]=[],warnings:string[]=[];
    let failed=false;
+   let firstFailure:unknown=null;
    for(let i=0;i<details.length;i++){
-    const [start,end]=groups[i];const value=details[i];
-    if(value.status==='fulfilled'){
-     if(value.value.text)notes.push('[Trang PDF '+start+'–'+end+']\n'+value.value.text);
-     warnings.push(...value.value.warnings);
-    }else{failed=true;warnings.push('Không đọc được trang PDF '+start+'–'+end+'; cần đọc thủ công từ SGK.');}
+    const [start,end]=groups[i],part=details[i];
+    if(part.status==='fulfilled'){
+     if(part.value.text)notes.push('[Trang PDF '+start+'–'+end+']\n'+part.value.text);
+     else failed=true;
+     warnings.push(...part.value.warnings);
+    }else{
+     failed=true;
+     firstFailure??=part.reason;
+     warnings.push('Không đọc được nhóm trang PDF '+start+'–'+end+'; giáo viên cần đối chiếu và bổ sung.');
+    }
    }
-   if(failed)warnings.push('Bản nháp chỉ có một phần trang; không được công bố trước khi đối chiếu đủ các trang.');
-   if(notes.length){result=reviewExtractedNotes({sourceText:notes.join('\n\n'),warnings});method='split-pages';}
-   else result=reviewExtractedNotes({sourceText:result.text,warnings:[...result.warnings,...warnings]});
-  }
+   if(failed)warnings.push('Một số trang chưa được đọc đầy đủ; KHÔNG công bố trước khi kiểm tra toàn bộ.');
+   if(notes.length){
+    result=reviewExtractedNotes({sourceText:notes.join('\n\n'),warnings});
+    method='split-pages';
+   }else if(primaryError){
+    throw firstFailure??primaryError;
+   }else{
+    result=reviewExtractedNotes({sourceText:result.text,warnings:[...result.warnings,...warnings]});
+   }
+  }else if(primaryError)throw primaryError;
 
   const resultWarnings=[...result.warnings];
   if(result.text.length<MIN_APPROVABLE_CHARS)
    resultWarnings.unshift('Gemini chỉ trả '+result.text.length+' ký tự. Nội dung còn thiếu, chưa thể duyệt; cần đối chiếu và bổ sung từ sách gốc.');
   if(!result.text) return Response.json({
-   error:'Gemini không trích được nội dung nào từ ảnh PDF dù đã thử đọc bổ sung. Hãy tách PDF theo trang và thử lại hoặc nhập văn bản thủ công.',
+   error:'Gemini không trích được nội dung nào từ ảnh PDF dù đã thử đọc bổ sung. Hãy thử lấy chữ trực tiếp từ PDF, hoặc thu hẹp phạm vi trang trước khi quét lại.',
    code:'EMPTY_EXTRACTED_NOTES',extractedLength:0,warnings:resultWarnings,method
   },{status:422});
 
@@ -119,6 +143,6 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   const detail=describeGeminiError(e);
   console.error('EDUBRIDGE PDF extraction error',{code:detail.code,type:e instanceof Error?e.name:'unknown'});
   if(detail.code!=='GEMINI_UNKNOWN_ERROR')return Response.json({error:detail.message,code:detail.code},{status:detail.status});
-  return Response.json({error:'Lỗi khi xử lý PDF. Hãy thử lại hoặc nhập văn bản từ Word/TXT vào bản nháp.',code:'PDF_PROCESSING_FAILED'},{status:502});
+  return Response.json({error:'Lỗi khi xử lý PDF. Hãy thử tính năng lấy chữ trực tiếp từ PDF hoặc thu hẹp phạm vi trang.',code:'PDF_PROCESSING_FAILED'},{status:502});
  }
 }

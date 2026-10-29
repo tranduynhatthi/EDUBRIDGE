@@ -6,6 +6,7 @@ import RequireLogin from '@/components/RequireLogin';
 import {authorizedFetch,supabaseBrowser} from '@/lib/supabase';
 import {SUBJECT_GROUPS,isValidSubject,type SubjectName} from '@/lib/subjects';
 import BatchImportPanel from '@/components/BatchImportPanel';
+import {importLessonSourceFile} from '@/lib/lesson-source-import';
 
 type Book={id:string,title:string,subject:string,grade:string,book_series:string,publisher:string,page_count:number,is_active:boolean};
 type CatalogLesson={id:string,textbook_id:string,sort_order:number,chapter:string,title:string,start_page:number,end_page:number,source_text:string,extraction_note:string,is_published:boolean};
@@ -96,8 +97,24 @@ export default function LibraryAdmin(){
    await refresh();setStatus(`Đã thêm ${json.added} bài. Kho dự kiến ${json.total} bài; tất cả bài mới đều là bản nháp chưa hiển thị với giáo viên.`);
   }catch(e){setError(e instanceof Error?e.message:'Không tạo được mục lục.');}finally{setBusy(false);}
  }
+ async function importDraftTextFile(e:ChangeEvent<HTMLInputElement>){
+  const file=e.target.files?.[0];e.target.value='';
+  if(!file||!editId||!selectedRecord||selectedRecord.is_published)return;
+  if(editText.trim()&&!window.confirm('Nội dung vừa nhập sẽ THAY văn bản đang hiển thị trong ô chỉnh sửa. Bản đã lưu trong hệ thống vẫn được giữ nguyên cho đến khi bấm Lưu bản nháp. Bạn muốn tiếp tục?'))return;
+  setBusy(true);setError('');setStatus('');setExtractError('');
+  try{
+   const imported=await importLessonSourceFile(file);
+   setEditText(imported.text);setConfirmed(false);
+   setEditNote(old=>[old,'Nhập văn bản từ '+file.name+'; cần đối chiếu SGK trước khi duyệt.'].filter(Boolean).join('\n').slice(0,1200));
+   setExtractStatus(imported.warning);
+   setStatus('Đã nạp '+imported.text.length.toLocaleString('vi-VN')+' ký tự từ '+file.name+' vào ô chỉnh sửa. Chưa lưu vào kho SGK: hãy kiểm tra và chọn "Lưu bản nháp".');
+  }catch(err){setError(err instanceof Error?err.message:'Không đọc được tệp văn bản.');}
+  finally{setBusy(false);}
+ }
  async function analyzeScan(){
-  if(!editId)return;setBusy(true);setError('');setStatus('');setExtractError('');setExtractStatus('Đang tải và tách các trang SGK từ kho riêng tư, sau đó gửi Gemini đọc hình ảnh. Vui lòng chờ...');
+  if(!editId||selectedRecord?.is_published)return;
+  if(editText.trim()&&!window.confirm('Quét lại bằng Gemini có thể dùng quota/trả phí. Kết quả sẽ thay văn bản HIỂN THỊ trong ô chỉnh sửa nhưng KHÔNG ghi đè nội dung đã lưu nếu bản nháp đã có chữ. Bạn có đồng ý không?'))return;
+  setBusy(true);setError('');setStatus('');setExtractError('');setExtractStatus('Đang tải và tách các trang SGK từ kho riêng tư, sau đó gửi Gemini đọc hình ảnh. Vui lòng chờ...');
   try{
    const r=await authorizedFetch(`/api/admin/lessons/${editId}/analyze-pdf`,{method:'POST'});
    const json=await r.json();
@@ -110,7 +127,10 @@ export default function LibraryAdmin(){
    }
    setExtractStatus('Gemini đã tạo bản nháp '+(json.extractedLength||json.sourceText.length)+' ký tự bằng cách '+(json.method==='split-pages'?'đọc hai nhóm trang.':'đọc cả bài.')+' Nội dung cần hậu kiểm.');
    setEditText(json.sourceText);setEditNote(json.extractionNote);setConfirmed(false);
-   await refresh();setStatus('AI đã đọc PDF ảnh và ghi BẢN NHÁP. Hãy mở SGK đối chiếu từng công thức và hình vẽ trước khi duyệt.');
+   if(!json.previewOnly)await refresh();
+   setStatus(json.previewOnly
+    ?'Gemini đã đọc lại PDF và đưa kết quả vào ô chỉnh sửa. Nội dung CŨ trong cơ sở dữ liệu vẫn được giữ nguyên; cần kiểm tra và bấm "Lưu bản nháp" để thay đổi.'
+    :'AI đã đọc PDF và ghi BẢN NHÁP. Hãy đối chiếu từng công thức và hình vẽ trước khi duyệt.');
   }catch(e){const msg=e instanceof Error?e.message:'Không tạo được bản nháp từ SGK.';setExtractError(msg);setError(msg);setExtractStatus('Trích xuất thất bại; dữ liệu chưa bị ghi đè.');}finally{setBusy(false);}
  }
  async function checkGemini(){setAiCheckBusy(true);setAiCheckResult('Đang thử kết nối thực tế với Gemini...');setExtractError('');try{
@@ -161,11 +181,16 @@ export default function LibraryAdmin(){
  </section>
  {selectedRecord&&<section id="review-lesson" className="white-panel form-section" style={{marginTop:20}}><h2><span className="step-dot">3</span> Hậu kiểm và duyệt: {selectedRecord.title}</h2>
  <div className="attention"><Info size={19}/><div>Đọc đối chiếu với bản PDF gốc. Phần trích chữ có thể thiếu hình vẽ, chỉ số trên/dưới, dấu âm, căn thức hoặc ký hiệu. Không công bố nếu chưa xử lí lỗi kiến thức.</div></div>
- {!selectedRecord.is_published&&!selectedRecord.source_text.trim()&&<div style={{marginBottom:18}}>
- <p className="muted">Bài này mới có tên và phạm vi trang. Tệp SGK là PDF ảnh quét, nên không thể trích chữ bằng cách thông thường. Bấm nút dưới để AI đọc các trang của đúng bài; kết quả chỉ là bản nháp, cần giáo viên duyệt.</p>
+ {!selectedRecord.is_published&&<div style={{marginBottom:18}}>
+ <p className="muted">Nếu PDF quét lỗi hoặc mới đọc được một phần, hãy dán văn bản vào ô bên dưới hoặc nhập từ file Word/TXT để cập nhật nhanh, không cần gọi AI. Khi thực sự cần, có thể cho Gemini quét lại PDF; bản đã lưu sẽ không tự bị ghi đè.</p>
+ <label className="upload-box" style={{marginBottom:12,cursor:busy?'not-allowed':'pointer'}}>
+  <FileUp size={22}/><b>Nhập nhanh nội dung 1 bài từ Word (.docx), TXT hoặc Markdown</b>
+  <span>Chọn tệp chỉ chứa nội dung bài đang mở, tối đa 10 MB; bản lưu cũ được bảo toàn cho tới khi nhấn Lưu bản nháp.</span>
+  <input type="file" accept=".docx,.txt,.md,text/plain" hidden disabled={busy} onChange={e=>{void importDraftTextFile(e);}}/>
+ </label>
  <div className="action-row">
  <button type="button" className="secondary-btn" onClick={checkGemini} disabled={aiCheckBusy||busy}><ShieldCheck size={16}/>{aiCheckBusy?'Đang kiểm tra Gemini...':'Kiểm tra kết nối Gemini'}</button>
- <button type="button" className="primary-btn" onClick={analyzeScan} disabled={busy||aiCheckBusy}><ScanText size={17}/> {busy?'Đang đọc PDF, vui lòng chờ…':'AI đọc PDF bài này → Tạo nguồn nháp'}</button>
+ <button type="button" className="primary-btn" onClick={analyzeScan} disabled={busy||aiCheckBusy}><ScanText size={17}/> {busy?'Đang đọc PDF, vui lòng chờ…':'AI quét lại PDF (có thể tốn phí)'}</button>
  </div>
  {aiCheckResult&&<p role="status" style={{marginTop:12}}>{aiCheckResult}</p>}
  {extractStatus&&<p role="status" style={{marginTop:8}}>{extractStatus}</p>}
@@ -173,6 +198,8 @@ export default function LibraryAdmin(){
  </div>}
  <label className="field">Toàn văn trích xuất – có thể sửa<textarea rows={19} value={editText} onChange={e=>{setEditText(e.target.value);setConfirmed(false);}}/></label>
  <p className="small-count">{editText.length.toLocaleString('vi-VN')} / 30.000 ký tự</p>
+ {editText.length>0&&editText.length<250&&<p className="muted">Bản nháp cần ít nhất 250 ký tự trước khi lưu. Nội dung đang có: {editText.length} ký tự.</p>}
+ {editText.length>25000&&<p className="warning-box">Nội dung vượt 25.000 ký tự, không thể gửi trọn vẹn vào công cụ soạn AI hiện tại. Hãy rút gọn theo đúng bài trước khi duyệt.</p>}
  <label className="field">Ghi chú kiểm duyệt<textarea rows={3} value={editNote} onChange={e=>setEditNote(e.target.value)}/></label>
  <label className="check-row"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>Tôi đã đối chiếu trang nguồn và kiểm tra khái niệm, công thức, đơn vị, hình ảnh liên quan của bài.</span></label>
  <div className="action-row"><button disabled={busy||editText.length<250} className="secondary-btn" onClick={()=>saveReview(false)} type="button"><Save size={17}/> Lưu bản nháp</button>

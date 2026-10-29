@@ -6,7 +6,7 @@ const ui=read('src/app/admin/library/page.tsx');
 const api=read('src/app/api/admin/lessons/[id]/analyze-pdf/route.ts');
 assert(ui.includes('importLessonSourceFile(file)'),'Draft quick import must call the file reader');
 assert(ui.includes('onChange={e=>{void importDraftTextFile(e);}}'),'Draft import must have a file selector');
-assert(ui.includes('Nhập nhanh nội dung 1 bài từ Word'),'Must be discoverable to teachers/admins');
+assert(ui.includes('Tùy chọn: nhập văn bản đã có từ Word hoặc TXT'),'Must be discoverable to teachers/admins');
 assert(ui.includes('Lưu bản nháp'),'Import is only staged until explicit save');
 assert(ui.includes('setConfirmed(false)'),'Editing must reset review confirmation');
 assert(ui.includes("selectedRecord.is_published"),'Quick-import and OCR retries must be scoped to unpublished lessons');

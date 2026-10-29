@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import RequireLogin from '@/components/RequireLogin';
 import {authorizedFetch,supabaseBrowser} from '@/lib/supabase';
 import {SUBJECT_GROUPS,isValidSubject,type SubjectName} from '@/lib/subjects';
+import {getSubjectPptPrompt,SUBJECT_PPT_PROMPT_VERSION} from '@/lib/subject-ppt-prompts';
 import {makeOfflineLesson} from '@/lib/offline-lesson';
 
 type ReadyLesson={id:string;subject:string;grade:string;slug:string;sort_order:number;chapter:string;title:string;source_text:string};
@@ -16,6 +17,7 @@ type Choice={key:string;id:string;kind:'ready'|'approved';title:string;chapter:s
 export default function BuilderPage(){
  const router=useRouter();
  const [subject,setSubject]=useState<SubjectName>('Vật lí');
+ const detailedPrompt=getSubjectPptPrompt(subject);
  const [grade,setGrade]=useState<'10'|'11'|'12'>('12');
  const [ready,setReady]=useState<ReadyLesson[]>([]);
  const [approved,setApproved]=useState<ApprovedLesson[]>([]);
@@ -122,7 +124,7 @@ export default function BuilderPage(){
  return <RequireLogin><AppShell subtitle="Chọn bài học">
   <div className="page-heading"><div><div className="eyebrow">EDUBRIDGE / LESSON LIBRARY</div>
    <h1>Chọn bài học từ cơ sở dữ liệu</h1>
-   <p>Giáo viên chỉ cần chọn môn, lớp và bài học. Không cần tải sách hoặc nhập lại nội dung.</p><p className="muted"><strong>EMI/CLIL Slide Studio V3.2:</strong> PPT trực quan, có hỗ trợ phát âm, giao tiếp lớp học và Speaker Notes theo từng môn. Bài đã lưu trước đây cần tạo lại để có nội dung AI mới.</p></div>
+   <p>Giáo viên chỉ cần chọn môn, lớp và bài học. Không cần tải sách hoặc nhập lại nội dung.</p><p className="muted"><strong>EMI/CLIL Slide Studio V4.0:</strong> PPT trực quan, có hỗ trợ phát âm, giao tiếp lớp học và Speaker Notes theo từng môn. Bài đã lưu trước đây cần tạo lại để có nội dung AI mới.</p></div>
    <div className="header-symbol"><LibraryBig size={29}/></div></div>
   <form className="builder-grid" onSubmit={createLesson}>
    <div className="form-main">
@@ -159,7 +161,29 @@ export default function BuilderPage(){
      </details>}
      <p className="muted" style={{marginTop:14}}>Thư viện sẽ được cập nhật theo môn và lớp khi học liệu chính thức có quyền sử dụng đã được nhập và hậu kiểm.</p>
     </section>
-    <section className="white-panel form-section"><h2><span className="step-dot">2</span> Tùy chỉnh bài dạy</h2>
+    <section className="white-panel form-section">
+     <h2><span className="step-dot">2</span> Bộ prompt chuyên sâu theo môn · V{SUBJECT_PPT_PROMPT_VERSION}</h2>
+     <p><strong>{subject} — {detailedPrompt.nameEn}</strong></p>
+     <p className="muted">EDUBRIDGE tự chọn bộ hướng dẫn riêng cho môn này. Các hướng dẫn dưới đây được gửi trực tiếp cho AI khi tạo nội dung PPT, không chỉ là gợi ý hiển thị.</p>
+     <p><strong>Tiến trình gợi ý:</strong> {detailedPrompt.slideArchetypes.join(' → ')}</p>
+     <details style={{marginTop:12}}>
+      <summary style={{cursor:'pointer',fontWeight:700}}>Xem chi tiết prompt môn {subject}</summary>
+      {([
+       ['Tiến trình dạy học',detailedPrompt.teachingFlow],
+       ['Quy tắc hình ảnh, sơ đồ và đồ thị',detailedPrompt.visuals],
+       ['Thuật ngữ và phát âm',detailedPrompt.vocabulary],
+       ['Classroom English',detailedPrompt.classroomLanguage],
+       ['Hoạt động học sinh',detailedPrompt.activities],
+       ['Câu hỏi và hậu kiểm',detailedPrompt.assessment],
+       ['Lỗi nhận thức phải tránh',detailedPrompt.misconceptions],
+       ["Teacher's Notes",detailedPrompt.notes]
+      ] as [string,string[]][]).map(([heading,items])=><div key={heading} style={{marginTop:15}}>
+       <h3 style={{fontSize:16,marginBottom:7}}>{heading}</h3>
+       <ul style={{paddingLeft:20}}>{items.map((item,index)=><li key={index} style={{marginBottom:7}}>{item}</li>)}</ul>
+      </div>)}
+     </details>
+    </section>
+    <section className="white-panel form-section"><h2><span className="step-dot">3</span> Tùy chỉnh bài dạy</h2>
      <div className="form-grid">
       <label className="field">Mức tiếng Anh<select value={level} onChange={e=>setLevel(e.target.value as 'A2'|'B1'|'B2')}>
        <option value="A2">A2 – Cơ bản</option><option value="B1">B1 – Trung bình</option><option value="B2">B2 – Khá</option>
@@ -179,8 +203,8 @@ export default function BuilderPage(){
    </div>
    <aside className="form-aside">
     <section className="white-panel preview-panel">
-     <div className="aside-title"><Sparkles size={20}/> EDUBRIDGE AI · PPT EMI/CLIL V3.2</div>
-     <h3>Tạo bài dạy môn {subject}</h3>
+     <div className="aside-title"><Sparkles size={20}/> EDUBRIDGE AI · PPT EMI/CLIL V4.0</div>
+     <h3>Tạo bài dạy môn {subject}</h3><p className="muted">Đang sử dụng prompt chuyên sâu {detailedPrompt.nameEn} V{SUBJECT_PPT_PROMPT_VERSION}</p>
      <ul className="feature-list">
       <li><BookOpen size={16}/> Mục tiêu kiến thức và ngôn ngữ</li>
       <li><FileText size={16}/> Thuật ngữ Anh–Việt</li>

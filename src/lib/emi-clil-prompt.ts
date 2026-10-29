@@ -1,3 +1,4 @@
+import {describeSubjectPptPrompt,SUBJECT_PPT_PROMPT_VERSION} from './subject-ppt-prompts.ts';
 /**
  * Centralized EMI/CLIL lesson-generation contract.
  * No source textbook text is embedded here; source material remains an untrusted data block.
@@ -37,6 +38,11 @@ export function buildEmiClilLessonInstructions({subject,level,durationMinutes}:{
  'LAYOUT MIX: begin with warmup, select among concept/process/comparison/diagram/formula/example/activity/summary according to actual subject matter. One slide = one key idea. Do not force equations in literature/history. No raw LaTeX. For visualSuggestion give descriptive teacher-verifiable annotations; never claim images were embedded by AI.',
  'PRACTICE: '+targetQuiz+' four-option English checkpoint questions with correctIndex 0–3 and brief accurate Vietnamese rationale. Mix understanding, source-based application and correct use of terminology. Ensure all question answers are recoverable from source.',
  'QUALITY: Scientific/subject truth first, then language accuracy, source alignment and classroom usability. Do not hallucinate maps, dates, quotes, formulas, units or numeric graph coordinates. Explicitly report any uncertain/unsourced visual in qualityWarnings.',
+ 'SUBJECT-LEVEL PROMPT LIBRARY: EDUBRIDGE PPT V'+SUBJECT_PPT_PROMPT_VERSION+'. Use the FULL dedicated contract below; these rules are subject-dependent, not generic styling.',
+ describeSubjectPptPrompt(subject),
+ 'SLIDE QUALITY CONTROL: 45 minutes requires 8–10 unique substantive slide objects where the approved source contains enough material; 90 minutes requires 12–14. Do not pad with duplicate headings or unsupported facts. When source is too short, create a coherent shorter lesson, and explain the shortage in qualityWarnings.',
+ 'REQUIRED DISTRIBUTION: Start with 1 warmup; cover concept/process/diagram according to the source; include at least 1 source-based application/example, 1 communicative student activity and 1 meaningful reflection. Vocabulary and four-option quiz checkpoints are added separately by the PPT exporter; avoid repeating them as new generic content slides.',
+ 'VISUAL-TO-LEARNING ALIGNMENT: visualSuggestion must state WHAT learners should notice, labels or units needed, and any facts that need verification. Use the subject-specific illustration guidance rather than a generic template. Speakable language should support meaning rather than merely translating the text.',
  'OUTPUT: Exactly the requested JSON schema, nothing outside JSON.'
  ].join('\n');
 }

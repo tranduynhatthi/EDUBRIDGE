@@ -4,6 +4,7 @@ import { requireTeacher, authFailure } from '@/lib/server-auth';
 import {isValidSubject} from '@/lib/subjects';
 import {selectGeminiModel} from '@/lib/gemini-models';
 import {buildEmiClilLessonInstructions} from '@/lib/emi-clil-prompt';
+import {SUBJECT_PPT_PROMPT_VERSION} from '@/lib/subject-ppt-prompts';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // Check hosting plan/Fluid Compute limits.
@@ -87,6 +88,8 @@ export async function POST(request: Request) {
     const result={output_parsed:parsed.data};
     const lesson = result.output_parsed;
     lesson.durationMinutes=durationMinutes;
+    lesson.subjectPromptVersion=SUBJECT_PPT_PROMPT_VERSION;
+    lesson.subjectPromptSubject=data.subject;
     if (lesson.slides.length < 2 || lesson.quiz.some((q) => q.choices.length !== 4 || q.correctIndex < 0 || q.correctIndex > 3)) {
       return Response.json({error:'Gemini chưa tạo đủ slide hoặc mỗi câu hỏi chưa có đúng 4 lựa chọn. Hãy thử lại.',code:'LESSON_QUALITY_CHECK_FAILED'},{status:502});
     }
